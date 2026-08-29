@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Court Application — Interactive Prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --navy:#1B3A5C; --navy-dark:#122841; --teal:#2E7D6B;
+    --bg:#F5F7F9; --card:#FFFFFF; --border:#E1E5EA;
+    --text:#1F2937; --text-mute:#6B7280;
+    --amber:#B45309; --amber-bg:#FEF3C7;
+    --green:#166534; --green-bg:#DCFCE7;
+    --red:#991B1B; --red-bg:#FEE2E2;
+    --blue:#1E40AF; --blue-bg:#DBEAFE;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);}
+  .topbar{background:var(--navy);color:#fff;display:flex;align-items:center;gap:16px;padding:10px 18px;position:sticky;top:0;z-index:10;flex-wrap:wrap;}
+  .topbar h1{font-size:17px;font-weight:600;margin:0;}
+  .spacer{flex:1;}
+  .topbar select{background:#254A6E;color:#fff;border:1px solid #375F87;border-radius:6px;padding:6px 10px;font-size:13px;}
+  .bell{position:relative;font-size:18px;cursor:default;padding:4px 8px;}
+  .bell .count{position:absolute;top:-2px;right:0;background:#DC2626;color:#fff;font-size:10px;border-radius:8px;padding:1px 5px;}
+  .layout{display:flex;min-height:calc(100vh - 52px);}
+  .sidebar{width:250px;background:#fff;border-right:1px solid var(--border);padding:14px 0;flex-shrink:0;}
+  .sidebar .grp{padding:8px 18px 4px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-mute);font-weight:700;margin-top:10px;}
+  .navitem{display:block;width:100%;text-align:left;background:none;border:none;padding:9px 18px;font-size:14px;color:var(--text);cursor:pointer;border-left:3px solid transparent;}
+  .navitem:hover{background:#F0F3F6;}
+  .navitem.active{background:#EAF1F7;border-left-color:var(--navy);font-weight:600;color:var(--navy);}
+  .content{flex:1;padding:26px 32px;max-width:980px;}
+  .content h2{font-size:22px;margin:0 0 4px;color:var(--navy);}
+  .subtitle{color:var(--text-mute);font-size:13.5px;margin:0 0 20px;max-width:760px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:18px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+  .card h3{font-size:14px;margin:0 0 10px;}
+  .item{border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:13px;}
+  .item b{font-size:13.5px;}
+  .muted{color:var(--text-mute);font-size:12.5px;}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:13.5px;}
+  th{background:#F0F3F6;text-align:left;padding:9px 12px;font-size:12px;text-transform:uppercase;color:var(--text-mute);letter-spacing:.03em;}
+  td{padding:9px 12px;border-top:1px solid var(--border);}
+  .chip{display:inline-block;padding:3px 9px;border-radius:10px;font-size:12px;font-weight:600;}
+  .chip-default{background:#EEF1F4;color:#374151;}
+  .chip-primary{background:var(--blue-bg);color:var(--blue);}
+  .chip-success{background:var(--green-bg);color:var(--green);}
+  .chip-warning{background:var(--amber-bg);color:var(--amber);}
+  .chip-error{background:var(--red-bg);color:var(--red);}
+  .party-card{border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:#fff;}
+  .filterchip{display:inline-block;padding:5px 12px;border-radius:16px;border:1px solid var(--border);font-size:12.5px;margin:0 6px 6px 0;cursor:pointer;background:#fff;}
+  .filterchip.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .thread-list button{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;font-size:13px;}
+  .thread-list button.active{border-color:var(--navy);background:#EAF1F7;}
+  .msg{border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:#fff;}
+  .alert{border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:13.5px;}
+  .alert-error{background:var(--red-bg);color:var(--red);border:1px solid #FCA5A5;}
+  .alert-info{background:var(--blue-bg);color:var(--blue);border:1px solid #93C5FD;}
+  .disabled-btn{background:#D1D5DB;color:#6B7280;border:none;padding:9px 16px;border-radius:6px;font-size:13.5px;cursor:not-allowed;margin-bottom:16px;}
+  .formbox{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:18px;}
+  .formbox h3{font-size:14px;margin:0 0 10px;color:var(--navy);}
+  .formbox label{display:block;font-size:12px;color:var(--text-mute);margin-bottom:3px;}
+  .formbox input[type=text],.formbox input[type=number],.formbox select,.formbox textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13.5px;margin-bottom:10px;font-family:inherit;}
+  .formbox textarea{resize:vertical;min-height:60px;}
+  .btn-sm{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;}
+  .btn-sm.outline{background:#fff;color:var(--navy);border:1px solid var(--navy);}
+  .btn-sm.teal{background:var(--teal);}
+  .err-text{color:var(--red);font-size:12px;margin:-4px 0 8px;}
+  .inline-actions{display:flex;gap:8px;margin-top:6px;}
+  tr.clickable{cursor:pointer;}
+  tr.clickable:hover{background:#F5F8FB;}
+  .backlink{background:none;border:none;color:var(--navy);font-size:13px;cursor:pointer;padding:0;margin-bottom:14px;font-weight:600;}
+  .backlink:hover{text-decoration:underline;}
+  .detailbox{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+  .detailbox dl{display:grid;grid-template-columns:160px 1fr;gap:8px 14px;margin:0 0 16px;}
+  .detailbox dt{color:var(--text-mute);font-size:12.5px;}
+  .detailbox dd{margin:0;font-size:13.5px;}
+  /* ===== Dashboard "what's required of you" hero + nav badges — added per direct user request: as an end user
+     (e.g. Plaintiff), the app wasn't visually telling them what's owed of them. ===== */
+  .navitem{position:relative;}
+  .nav-badge{display:inline-block;min-width:17px;height:17px;line-height:17px;text-align:center;background:var(--red);color:#fff;font-size:10.5px;font-weight:700;border-radius:9px;padding:0 5px;margin-left:6px;vertical-align:1px;}
+  .hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:20px;}
+  .hero-tile{border-radius:12px;padding:16px 18px;color:#fff;}
+  .hero-tile .hero-num{font-size:30px;font-weight:800;line-height:1;margin-bottom:4px;}
+  .hero-tile .hero-label{font-size:12.5px;font-weight:600;opacity:.95;}
+  .hero-tile .hero-sub{font-size:11.5px;opacity:.85;margin-top:2px;}
+  .hero-tile.urgent{background:linear-gradient(135deg,#B91C1C,#DC2626);}
+  .hero-tile.action{background:linear-gradient(135deg,#B45309,#D97706);}
+  .hero-tile.info{background:linear-gradient(135deg,#1E40AF,#2563EB);}
+  .hero-tile.calm{background:linear-gradient(135deg,#166534,#16A34A);}
+  .hero-banner{background:#fff;border:1px solid var(--border);border-left:4px solid var(--green);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:14px;color:var(--green);font-weight:600;}
+  .hero-banner.needs-action{border-left-color:var(--amber);color:var(--amber);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Court Application — Prototype</h1>
+  <div class="spacer"></div>
+  <label style="font-size:12px;">Matter
+    <select id="matterSelect" onchange="onMatterChange(this.value)"></select>
+  </label>
+  <label style="font-size:12px;">Viewing as
+    <select id="roleSelect" onchange="onRoleChange(this.value)">
+      <option>Plaintiff</option><option>Defendant</option><option>Lawyer</option>
+      <option>Expert</option><option>Witness</option><option>CourtAdmin</option>
+    </select>
+  </label>
+  <div class="bell">🔔<span class="count" id="notifCount">0</span></div>
+</div>
+
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content"></div>
+</div>
+
+<!-- Map Picker overlay — added this round so location fields are chosen from a map, never free-typed. Lives outside
+     #content (not touched by render()) so opening it never wipes whatever else the user is mid-typing in the form. -->
+<div id="mapPickerOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:50;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:10px;max-width:520px;width:92%;max-height:85vh;overflow:auto;padding:16px 18px;">
+    <h3 style="margin:0 0 4px;color:var(--navy);font-size:16px;">Choose a Location</h3>
+    <p class="muted" style="margin:0 0 10px;font-size:12.5px;">Select a known address on this Matter, or use your current location — captured automatically, not typed.</p>
+    <div id="mapPickerFrameWrap" style="border:1px solid #E1E5EA;border-radius:8px;overflow:hidden;margin-bottom:10px;height:220px;"></div>
+    <button class="btn-sm teal" style="margin-bottom:10px;width:100%;" onclick="useCurrentLocationSim()">📍 Use Current Location (simulated GPS)</button>
+    <div id="mapPickerQuickList"></div>
+    <button class="btn-sm outline" style="margin-top:8px;" onclick="closeMapPicker()">Cancel</button>
+  </div>
+</div>
+
+<script>
+const DATA = {
+  // Matter "type" is an explicit field (not inferred) — added this round because Shehab supplied 6 benchmark apps
+  // each specializing in a genuinely different case type. Family/Commercial were previously distinguished only by
+  // whether Info Bank had a Child entry (a clever proxy with no dedicated field); now that real, distinct case
+  // categories are in scope, an honest `type` field is the correct model, not an invented business rule — it mirrors
+  // categorization the client's own reference apps already use (CasePeer=PersonalInjury, Filevine=CriminalDefense,
+  // eimmigration=Immigration, Tyler/Modria=Commercial ODR).
+  matters: [
+    { id:"MAT-0001", type:"Family", title:"Anderson Family — Parenting Matter", caseNumber:"2026-FC-04871", court:"Cook County Circuit Court — Domestic Relations Division (Illinois)", status:"Active", opened:"2026-06-01",
+      parties:[
+        {name:"Rachel Anderson", role:"Plaintiff", contact:"rachel.anderson@example.com"},
+        {name:"David Anderson", role:"Defendant", contact:"david.anderson@example.com"},
+        {name:"Jennifer Cole, Esq.", role:"Lawyer", contact:"jennifer.cole@example.com"},
+        {name:"Robert Hayes, Esq.", role:"Lawyer", contact:"robert.hayes@example.com"},
+        {name:"Dr. Laura Bennett — Child Psychologist", role:"Expert", contact:"laura.bennett@example.com"},
+        // Added per Shehab's direct request: a Guardian ad Litem / Attorney for the Child (represents the child's
+        // own interests, separate from either parent's lawyer — standard in US family court) and a secondary
+        // guardian (extended-family member with a recognized backup custody/visitation role). Both use existing
+        // role categories already in the app (Lawyer / Guardian) — no new role type invented.
+        {name:"Patricia Nguyen, Esq. — Attorney for the Child (Guardian ad Litem)", role:"Lawyer", contact:"p.nguyen@example.com"},
+        {name:"Margaret Coleman — Paternal Grandmother (secondary guardian, weekend backup custody)", role:"Guardian", contact:"margaret.coleman@example.com"}
+      ]
+    },
+    { id:"MAT-0002", type:"Commercial", title:"Meridian Freight LLC v. Cascade Logistics Co.", caseNumber:"2026-CC-01123", court:"Delaware Superior Court — Commercial Division", status:"Active", opened:"2026-07-10",
+      parties:[
+        {name:"Meridian Freight LLC (rep. James Whitfield)", role:"Plaintiff", contact:"j.whitfield@example.com"},
+        {name:"Cascade Logistics Co. (rep. Karen Sullivan)", role:"Defendant", contact:"k.sullivan@example.com"},
+        {name:"Mark Ellison", role:"Witness", contact:"m.ellison@example.com"},
+        {name:"Grant Whitmore — Independent Business Auditor", role:"Expert", contact:"g.whitmore@example.com"}
+      ]
+    },
+    // Personal Injury — benchmarked from 8am CasePeer (medical treatment tracking, settlement/demand negotiation,
+    // hospital + Medicare Secondary Payer lien management). US tort/insurance law is state-law-based but the
+    // underlying mechanics (hospital liens, MSP subrogation, demand/offer negotiation) are standard nationwide.
+    { id:"MAT-0003", type:"PersonalInjury", title:"Torres v. Metro Rideshare Inc.", caseNumber:"2026-L-08847", court:"Circuit Court of Cook County — Law Division (Illinois)", status:"Active", opened:"2026-07-15",
+      parties:[
+        {name:"Michael Torres", role:"Plaintiff", contact:"michael.torres@example.com"},
+        {name:"Metro Rideshare Inc. (rep. via insurer)", role:"Defendant", contact:"claims@metro-insurer.example.com"},
+        {name:"David Okafor, Esq.", role:"Lawyer", contact:"d.okafor@example.com"},
+        {name:"Dr. Angela Ruiz — Orthopedic Surgeon", role:"Expert", contact:"a.ruiz@example.com"}
+      ]
+    },
+    // Criminal Defense — benchmarked from Filevine (court dates, charges, confidential client communication).
+    // NOTE (legal-correctness decision, see allowed()/NAV): Messaging is deliberately NOT enabled on this Matter type.
+    // The existing Messaging module shows one shared thread list to every party with matter access — correct for a
+    // civil dispute, but WRONG for a criminal matter where Defendant-Lawyer communication is attorney-client
+    // privileged and must never be visible to the Plaintiff role (here, the State/prosecution). Building a
+    // role-scoped private-thread system is a real architecture change, not a gating tweak — flagged as out of scope
+    // this round rather than silently exposing privileged communication or faking a "secure" channel that isn't.
+    { id:"MAT-0004", type:"CriminalDefense", title:"State of Illinois v. Marcus Webb", caseNumber:"2026-CF-01923", court:"Circuit Court of Cook County — Criminal Division (Illinois)", status:"Active", opened:"2026-07-01",
+      parties:[
+        {name:"State of Illinois (Asst. State's Attorney Priya Nair)", role:"Plaintiff", contact:"p.nair@example.gov"},
+        {name:"Marcus Webb", role:"Defendant", contact:"marcus.webb@example.com"},
+        {name:"Daniel Foster, Esq. — Public Defender", role:"Lawyer", contact:"d.foster@example.com"}
+      ]
+    },
+    // Immigration — benchmarked from Cerenade eimmigration (USCIS form tracking, priority date / Visa Bulletin
+    // monitoring, RFE deadlines). Not adversarial like the other Matters — no Defendant party; the "opposing" entity
+    // is USCIS itself, a government agency, not a litigant, so it is not modeled as a party/role.
+    { id:"MAT-0005", type:"Immigration", title:"In re: I-485 Petition — Elena Vargas", caseNumber:"USCIS Receipt MSC2690012345", court:"USCIS — Chicago Field Office", status:"Active", opened:"2026-05-20",
+      parties:[
+        {name:"Elena Vargas", role:"Plaintiff", contact:"elena.vargas@example.com"},
+        {name:"Rosa Jimenez, Esq. — Immigration Attorney", role:"Lawyer", contact:"r.jimenez@example.com"}
+      ]
+    }
+  ],
+  infoBank:{ "MAT-0001":[
+      {cat:"Child",label:"Name",val:"Ethan Anderson (age 9)"},
+      {cat:"Child",label:"School",val:"Riverside Elementary School"},
+      {cat:"Child",label:"Clothing Size",val:"Kids 10"},
+      {cat:"Medical",label:"Allergies",val:"None on file"},
+      {cat:"Medical",label:"Primary Physician",val:"Dr. Sarah Mitchell, Riverside Pediatric Clinic"}
+    ], "MAT-0002":[{cat:"Case",label:"Dispute Type",val:"Breach of supply contract — goods delivery delay dispute."}],
+    "MAT-0003":[{cat:"Case",label:"Incident",val:"Rideshare motor-vehicle collision, downtown Chicago, 2026-07-14."}],
+    "MAT-0004":[{cat:"Case",label:"Matter Summary",val:"Aggravated Battery + Reckless Driving charges arising from a traffic altercation, 2026-06-28."}],
+    "MAT-0005":[{cat:"Case",label:"Petition Type",val:"Family-based Adjustment of Status (I-130 → I-485), spouse of a Lawful Permanent Resident."}] },
+  agreements:{ "MAT-0001":[
+      {title:"Custody Agreement v1",type:"Custody",status:"Active",date:"2026-06-05",summary:"Joint physical custody, alternating weeks."},
+      {title:"Child Support Agreement",type:"Child Support",status:"Active",date:"2026-06-05",summary:"Monthly support arrangement per court order."},
+      {title:"Visitation — Holidays",type:"Visitation",status:"Draft",date:"2026-09-01",summary:"Holiday visitation schedule, pending approval."}
+    ],
+    // Earlier, smaller Commercial dispute already resolved with an installment payment plan — case example given
+    // directly by Ahmed Kareem (partners' debt dispute: $100k owed, paid at $5k/month, with a recurring on-site
+    // inspection as a condition of the plan). Distinct from the NEW $180,000 negotiation currently pending below —
+    // realistic that a Matter accumulates more than one settled/ongoing financial thread over its life.
+    "MAT-0002":[
+      {title:"Interim Payment Plan Agreement",type:"Settlement",status:"Active",date:"25 days ago",summary:"Cascade Logistics Co. agreed to pay Meridian Freight LLC $100,000.00 in resolution of an earlier delayed-delivery claim, payable in 20 monthly installments of $5,000.00, with a recurring on-site inspection of Cascade's distribution facility by an independent auditor as a condition of the plan."}
+    ] },
+  activities:{ "MAT-0001":[
+      {title:"Soccer practice",when:"tomorrow 16:00",shared:"Both parents",personal:false},
+      {title:"Dentist appointment",when:"in 3 days, 10:00",shared:"Both parents",personal:false},
+      {title:"Parent-teacher meeting prep notes",when:"in 2 days",shared:"Only me",personal:true}
+    ], "MAT-0002":[] },
+  calendar:{ "MAT-0001":[
+      {title:"Custody handover",cat:"Handover",legend:"🔄 Handover",start:"tomorrow 17:00",end:"tomorrow 17:30"},
+      {title:"Soccer practice",cat:"Activity",legend:"⚽ Activity",start:"tomorrow 16:00",end:"tomorrow 17:00"},
+      {title:"Winter Holiday (per agreement)",cat:"Holiday",legend:"🎄 Holiday",start:"in 20 days",end:"in 27 days"},
+      {title:"Visitation — video call",cat:"Visitation-Virtual",legend:"💻 Virtual Visitation",start:"in 4 days, 19:00",end:"in 4 days, 19:30"}
+    ], "MAT-0002":[], "MAT-0004":[
+      {title:"Arraignment",cat:"Arraignment",legend:"⚖️ Arraignment",start:"completed — 2026-07-05",end:"completed — 2026-07-05"},
+      {title:"Pretrial Hearing",cat:"Pretrial-Hearing",legend:"📋 Pretrial Hearing",start:"in 9 days, 09:00",end:"in 9 days, 10:00"},
+      {title:"Jury Trial (scheduled)",cat:"Trial",legend:"🏛️ Trial",start:"in 41 days, 09:00",end:"in 43 days, 17:00"}
+    ] },
+  // Schedule Change Requests — request/approve/refuse workflow attached to a Calendar event, distinct from creating a
+  // brand-new event. Pattern benchmarked from OurFamilyWizard's Calendar "schedule change request" tool.
+  scheduleRequests:{ "MAT-0001":[
+      {eventTitle:"Soccer practice", requestedBy:"David Anderson", newStart:"Saturday 09:00", newEnd:"Saturday 10:00", reason:"Coach moved practice earlier this week — need to swap the pickup time.", status:"Pending", date:"today"}
+    ], "MAT-0002":[] },
+  messages:{ "MAT-0001":[
+      {subject:"School pickup schedule", msgs:[
+        {from:"Rachel Anderson",sent:"2 days ago, 09:00",viewed:"2 days ago, 09:40",body:"Confirming Friday pickup at 4:30 PM."},
+        {from:"David Anderson",sent:"2 days ago, 10:00",viewed:"2 days ago, 10:05",body:"Confirmed, see you then."}
+      ]},
+      {subject:"Medication update", msgs:[
+        {from:"Rachel Anderson",sent:"yesterday",viewed:null,body:"Ethan started a new allergy medication this week — dosage details attached."}
+      ]}
+    ], "MAT-0002":[] },
+  notes:{ "MAT-0001":[
+      {author:"Rachel Anderson",date:"yesterday",note:"Ethan had a great day at school today — scored well on his math quiz."},
+      {author:"David Anderson",date:"today",note:"Reminder: dentist appointment Thursday at 10 AM."},
+      // Evidence of the child speaking directly with their own attorney (Guardian ad Litem) — added per Shehab's
+      // direct request. Logged the same way any other party's note is logged; no new UI needed.
+      {author:"Patricia Nguyen, Esq. — Attorney for the Child (Guardian ad Litem)",date:"3 days ago",note:"Met with Ethan today for our regular check-in. He's doing well, enjoying school, and is excited about the upcoming soccer season. No concerns to flag from today's conversation."},
+      {author:"Margaret Coleman — Paternal Grandmother",date:"5 days ago",note:"Had Ethan for our regular Saturday afternoon — per the backup custody arrangement while David is traveling this month. He had a great time."}
+    ], "MAT-0002":[] },
+  // Journal — Check-Ins (GPS-style arrival verification at a handover/location) and Moments (a note, optionally with
+  // a photo and a location tag, shareable with the other parent, the child, or a legal professional). Distinct from
+  // the Notes Board above. Pattern benchmarked from OurFamilyWizard's Journal / Check-Ins & Moments.
+  journal:{ "MAT-0001":[
+      {type:"CheckIn", author:"Rachel Anderson", date:"today, 17:05", location:"Riverside Elementary School — 210 Maple Ave, Evanston, IL 60201 (pickup)", note:"Arrived on time for pickup.", shareWith:"Both parents"},
+      {type:"CheckIn", author:"David Anderson", date:"3 days ago, 08:45", location:"1420 Oakwood Drive, Evanston, IL 60201 (David's residence — weekend handover)", note:"Arrived for weekend pickup, on time.", shareWith:"Both parents"},
+      {type:"Moment", author:"David Anderson", date:"yesterday", location:"Home", note:"Ethan finished his reading log for the week — proud of him!", shareWith:"Both parents"}
+    ], "MAT-0002":[] },
+  expenses:{ "MAT-0001":[
+      {desc:"School supplies",amount:45.00,paidBy:"Rachel Anderson",status:"Reimbursement Requested",receipt:true,date:"5 days ago"},
+      {desc:"Soccer club fee",amount:120.00,paidBy:"David Anderson",status:"Pending",receipt:false,date:"2 days ago"},
+      {desc:"Dentist co-pay",amount:30.00,paidBy:"Rachel Anderson",status:"Reimbursed",receipt:true,date:"14 days ago"}
+    ], "MAT-0002":[] },
+  consents:{ "MAT-0001":[
+      {subject:"Travel Consent",by:"Rachel Anderson",date:"3 days ago",status:"Pending",details:"Requesting consent for a weekend trip to visit grandparents."},
+      {subject:"Change of Doctor",by:"David Anderson",date:"10 days ago",status:"Approved",details:"Switching to a new pediatrician closer to home."}
+    ], "MAT-0002":[] },
+  notices:{ "MAT-0001":[
+      {title:"Minor incident at school",sev:"Emergency",date:"yesterday",body:"Ethan had a minor fall at school and was seen by the school nurse. He is fine — sharing for visibility."},
+      {title:"School closed Monday",sev:"Informational",date:"6 days ago",body:"School closed Monday for a public holiday. Pickup schedule is unaffected."}
+    ], "MAT-0002":[] },
+  audit:{ "MAT-0001":[
+      {ts:"5 days ago, 09:00",module:"Expenses",actor:"Rachel Anderson",action:"Submitted expense: School supplies"},
+      {ts:"5 days ago, 14:00",module:"Submissions",actor:"Jennifer Cole, Esq.",action:"Filed Legal Document: Motion to Amend Visitation Schedule (on behalf of Rachel Anderson / Plaintiff)"},
+      {ts:"4 days ago, 10:00",module:"Payments",actor:"Court Clerk",action:"Reviewed filing: Motion to Amend Visitation Schedule"},
+      {ts:"3 days ago, 09:00",module:"Payments",actor:"Court System (automatic)",action:"Accepted filing and captured charge for Motion to Amend Visitation Schedule — $45.00 court fee + $15.00 service fee"},
+      {ts:"3 days ago, 11:00",module:"Consents",actor:"Rachel Anderson",action:"Requested consent: Travel"},
+      {ts:"2 days ago, 09:00",module:"Messaging",actor:"Rachel Anderson",action:"Sent message: School pickup schedule"},
+      {ts:"yesterday",module:"Notices",actor:"System",action:"Sent notice: Minor incident at school"}
+    ], "MAT-0002":[{ts:"yesterday",module:"System",actor:"System",action:"Matter opened"}] },
+  notifications:{ "MAT-0001":[
+      {ts:"2 hours ago",title:"New message: Medication update",read:false,module:"Messaging",forRole:null},
+      {ts:"1 day ago",title:"Consent request pending your review",read:false,module:"Consents",forRole:"Defendant"},
+      {ts:"3 days ago",title:"Expense reimbursement requested",read:true,module:"Expenses",forRole:"Defendant"},
+      {ts:"1 day ago",title:"You've been asked to submit a session note for Ethan Anderson",read:false,module:"Submissions",forRole:"Expert"},
+      {ts:"2 days ago",title:"Consent request awaiting your legal review",read:false,module:"Consents",forRole:"Lawyer"}
+    ], "MAT-0002":[
+      {ts:"1 day ago",title:"You've been asked to provide a witness statement",read:false,module:"Submissions",forRole:"Witness"}
+    ] },
+  // NOTE: there is deliberately no static `pending` seed collection — Pending Actions is computed live by
+  // computeLivePending() from Consents/Schedule Change Requests/Expenses/Negotiation/Payment Requests/RFEs/
+  // Submissions directly, so it can never drift out of sync with what those modules actually show (Single Source
+  // of Truth — a parallel hand-maintained list would just be duplicated, staling knowledge).
+  submissions:{ "MAT-0001":[
+      {role:"Expert",kind:"Expert Report",title:"Initial Parenting Assessment",body:"Placeholder summary of an earlier assessment session with the family.",date:"18 days ago",status:"Reviewed"},
+      {role:"Lawyer",kind:"Legal Document",docType:"Motion",title:"Motion to Amend Visitation Schedule",filedFor:"Plaintiff",body:"Filed on behalf of Rachel Anderson (Plaintiff), requesting the court amend the current holiday visitation schedule. Triggered the court e-filing fee shown in Payment Methods & Charges.",date:"5 days ago",status:"Reviewed"}
+    ], "MAT-0002":[
+      {role:"Witness",kind:"Witness Statement",title:"Delivery Incident Statement",body:"Placeholder statement regarding the delayed shipment referenced in the claim.",date:"6 days ago",status:"Submitted"},
+      // Site inspection example given directly by Ahmed Kareem — a neutral inspector visits the business monthly as
+      // a condition of a payment plan, shares their location, and files a report. Filed by the Expert role, visibility
+      // restricted by default (see visibleTo picker on the Submissions form) — Cascade's own lawyer can request access.
+      {role:"Expert",kind:"Inspection Report",title:"Monthly Site Inspection — Cascade Logistics Distribution Center",location:"Cascade Logistics Distribution Center, 4400 Westgate Industrial Pkwy, Wilmington, DE 19808",body:"Monthly on-site inspection performed per the Interim Payment Plan Agreement. Facility operations, inventory handling, and delivery-readiness reviewed; no material issues observed. Photographs and GPS location captured at time of visit.",date:"3 days ago",status:"Reviewed",visibleRoles:["Lawyer"]}
+    ] },
+  // Masked-only card-on-file records. No real PAN, CVV, or expiry beyond month/year is ever stored or entered here —
+  // pattern benchmarked from real US court e-filing (Tyler/Odyssey "TOGA" lets a filer save a card account-wide to
+  // pay filing fees) and from OurFamilyWizard's own stored-payment-method subscription billing.
+  paymentMethods:{ "MAT-0001":[
+      {party:"Rachel Anderson", brand:"Visa", last4:"4242", exp:"09/28", nickname:"Personal Visa"},
+      {party:"David Anderson", brand:"Mastercard", last4:"7781", exp:"01/27", nickname:"Personal Mastercard"}
+    ], "MAT-0002":[] },
+  // Court Fee amounts are illustrative — benchmarked from real published US family-court motion fees (roughly $50-$60,
+  // e.g. Franklin County PA's $56.25 family-motion fee) plus a separate service/convenience fee layered on top, the
+  // same two-part structure real US e-filing processors (Tyler/Odyssey "TOGA") use. Not a client-confirmed price.
+  payments:{ "MAT-0001":[
+      {kind:"Subscription", desc:"Monthly platform subscription", amount:20.00, currency:"$", party:"Rachel Anderson", chargedBy:"Platform (auto-renewal)", method:"Visa •••• 4242", status:"Paid", date:"12 days ago"},
+      {kind:"Subscription", desc:"Monthly platform subscription", amount:20.00, currency:"$", party:"David Anderson", chargedBy:"Platform (auto-renewal)", method:"Mastercard •••• 7781", status:"Paid", date:"12 days ago"},
+      {kind:"Court Fee", desc:"Motion to Amend Visitation Schedule — court filing fee", relatedTitle:"Motion to Amend Visitation Schedule",
+        breakdown:"Court filing fee $45.00 + platform service fee $15.00", amount:60.00, currency:"$",
+        party:"Rachel Anderson (Plaintiff)", filedBy:"Jennifer Cole, Esq. (Lawyer, on behalf of Plaintiff)",
+        chargedBy:"Court System (auto, on filing acceptance)", method:"Visa •••• 4242", status:"Paid", date:"3 days ago",
+        steps:[
+          {label:"Motion filed by lawyer — card pre-authorized for $60.00", who:"Jennifer Cole, Esq. (on behalf of Rachel Anderson / Plaintiff)", ts:"5 days ago"},
+          {label:"Filing reviewed by the court clerk", who:"Court Clerk", ts:"4 days ago"},
+          {label:"Court accepted the filing — pre-authorization captured ($45.00 court fee + $15.00 service fee)", who:"Court System (automatic)", ts:"3 days ago"},
+          {label:"Receipt recorded in Records Export", who:"System", ts:"3 days ago"}
+        ]}
+    ], "MAT-0002":[] },
+
+  // ===== Matter-type-specific modules added this round (benchmarked from 6 client-supplied apps) =====
+
+  // Personal Injury — Medical Treatment log. Illustrative only: no real Protected Health Information is stored or
+  // implied; a real build handling actual medical records would need HIPAA-compliant storage/access controls, which
+  // is out of scope for an HTML prototype and flagged here rather than silently ignored.
+  medicalTreatment:{ "MAT-0003":[
+      {provider:"Northwestern Memorial Hospital — Emergency Dept.", date:"2026-07-16", treatment:"Initial ER visit — X-rays (right knee, left wrist)", billAmount:4200.00, status:"Billed"},
+      {provider:"Dr. Angela Ruiz — Orthopedic Surgeon", date:"2026-07-24", treatment:"Follow-up exam, MRI ordered", billAmount:850.00, status:"Billed"},
+      {provider:"Riverside Physical Therapy", date:"2026-08-05", treatment:"Physical therapy — session 1 of 12", billAmount:180.00, status:"Billed"}
+    ] },
+  // Personal Injury — Settlement negotiation (Demand/Offer) + Lien tracking, one combined ledger per CasePeer's own
+  // "settlement management" framing (demands, offers, negotiation history, lien balances, fee calc in one place).
+  settlement:{ "MAT-0003":[
+      {kind:"Demand", by:"David Okafor, Esq. (on behalf of Michael Torres / Plaintiff)", amount:85000.00, date:"12 days ago", status:"Sent", notes:"Initial demand letter — medical specials ($5,230), lost wages ($3,800), pain & suffering."},
+      {kind:"Offer", by:"Metro Rideshare Inc. (insurer rep.)", amount:32000.00, date:"6 days ago", status:"Received", notes:"Initial counter-offer from the carrier — disputes the pain & suffering multiplier."},
+      {kind:"Lien", by:"Northwestern Memorial Hospital", amount:4200.00, date:"20 days ago", status:"Outstanding", notes:"Hospital lien on file, per state hospital lien statute — must be satisfied out of any settlement."},
+      {kind:"Lien", by:"Medicare (MSP)", amount:1050.00, date:"14 days ago", status:"Pending Final Demand", notes:"Medicare Secondary Payer conditional-payment claim (42 U.S.C. §1395y) — must be resolved before final disbursement."}
+    ] },
+  // Criminal Defense — Charges are filed by the State, not by any app user, so this table is deliberately read-only
+  // (no add-charge action) — modeling the real-world process correctly, not just re-using the generic "create" pattern.
+  charges:{ "MAT-0004":[
+      {count:1, charge:"Aggravated Battery (Class 2 Felony)", statute:"720 ILCS 5/12-3.05", plea:"Not Guilty"},
+      {count:2, charge:"Reckless Driving (Class A Misdemeanor)", statute:"625 ILCS 5/11-503", plea:"Not Guilty"}
+    ] },
+  bailStatus:{ "MAT-0004": {status:"Released on Bond", amount:15000.00, bondType:"10% Cash Bond", conditions:"No contact with complainant; surrender passport; weekly check-in with pretrial services.", lastUpdated:"5 days ago"} },
+  // Immigration — USCIS filings tracker + RFE deadline tracking, per eimmigration's own framing (form tracking,
+  // priority-date/Visa-Bulletin monitoring, RFE response windows).
+  immigrationFilings:{ "MAT-0005":[
+      {form:"I-130 — Petition for Alien Relative", receiptNumber:"MSC2690011111", filedDate:"2026-05-20", category:"F2A — Spouse/Child of LPR", priorityDate:"2026-05-20", status:"Approved"},
+      {form:"I-485 — Application to Register Permanent Residence", receiptNumber:"MSC2690012345", filedDate:"2026-06-10", category:"Adjustment of Status", priorityDate:"—", status:"Pending — Biometrics Completed"}
+    ] },
+  rfeTracking:{ "MAT-0005":[
+      {relatedForm:"I-485 — Application to Register Permanent Residence", issued:"9 days ago", deadline:"in 81 days", subject:"Additional evidence requested: updated medical exam (Form I-693) and 2 more months of joint financial records.", status:"Open"}
+    ] },
+  // Commercial — structured Negotiation & Settlement, benchmarked primarily from Tyler/Modria (the only one of the
+  // 6 apps confirmed actually deployed in US courts, per WebSearch — Columbia County FL and Orange County FL both
+  // went live with it), informed by Presolv360/ODR@ADGM's offer/counter-offer UX patterns. E-signature acceptance
+  // is ESIGN-Act-consistent (15 U.S.C. §7001 requires clear intent to sign + an affirmative act — typed legal name
+  // + an explicit checkbox, the same pattern DocuSign/HelloSign use) — never a fake "you're bound now" click.
+  // NOTE: `by` must exactly match the submitting party's `matter.parties[].name` — it's compared against
+  // currentPartyName() to gate the Accept/Reject/E-Sign actions to the OTHER party, not the submitter.
+  negotiation:{ "MAT-0002":[
+      {by:"Meridian Freight LLC (rep. James Whitfield)", amount:180000.00, terms:"Settlement covering delayed-delivery damages plus 5% of contract value in liquidated damages.", date:"4 days ago", status:"Pending"}
+    ] },
+  // Payment Requests — evidenced directly by Ahmed Kareem's own example: one party submits a request that the other
+  // party owes money and hasn't paid it, the debtor sees it and can pay it right there in the app. `by` is the
+  // requester's name and must exactly match matter.parties[].name (same gate pattern as Negotiation/Consents —
+  // Pay Now is offered to whichever party ISN'T the requester). Kept deliberately distinct from Expenses
+  // (personal reimbursement) — this models a court-connected settlement/installment/support payment being requested.
+  paymentRequests:{
+    "MAT-0001":[
+      {by:"Rachel Anderson", amount:650.00, reason:"August child support installment — per the Child Support Agreement.", dueDate:"in 3 days", date:"2 days ago", status:"Pending"}
+    ],
+    "MAT-0002":[
+      {by:"Meridian Freight LLC (rep. James Whitfield)", amount:5000.00, reason:"Monthly installment #4 of 20 — Interim Payment Plan Agreement (see Agreements).", dueDate:"in 5 days", date:"3 days ago", status:"Pending"}
+    ],
+    "MAT-0003":[
+      {by:"Michael Torres", amount:32000.00, reason:"Requesting release of the accepted settlement payment following the finalized Demand/Offer resolution.", dueDate:"in 7 days", date:"2 days ago", status:"Pending"}
+    ]
+  }
+};
+
+// Generates a small, clearly-labeled SVG "document" as a data URL — used only so pre-seeded example rows have a real,
+// openable attachment (no broken/decorative "📎" text). A file picked through the real <input type="file"> below is
+// read via FileReader instead and opens the actual chosen file, not a mock.
+function mockDocDataUrl(titleLine, subLines){
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const lines = (subLines||[]).map(esc);
+  const h = 90 + lines.length*24;
+  const rows = lines.map((l,i)=>`<text x="20" y="${74+i*24}" font-family="Arial, sans-serif" font-size="14" fill="#1F2937">${l}</text>`).join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="440" height="${h}">
+    <rect width="100%" height="100%" fill="#ffffff" stroke="#E1E5EA" stroke-width="2"/>
+    <rect x="0" y="0" width="100%" height="36" fill="#1B3A5C"/>
+    <text x="16" y="24" font-family="Arial, sans-serif" font-size="14" fill="#ffffff" font-weight="bold">📎 ${esc(titleLine)}</text>
+    <text x="16" y="56" font-family="Arial, sans-serif" font-size="11" fill="#6B7280">Illustrative attachment — generated for this prototype</text>
+    ${rows}
+  </svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+(function attachMockDocuments(){
+  Object.keys(DATA.expenses).forEach(mid=>{
+    (DATA.expenses[mid]||[]).forEach(e=>{
+      if(e.receipt && !e.fileData){
+        e.fileData = mockDocDataUrl('Receipt', [e.desc, '$'+e.amount.toFixed(2), e.date]);
+        e.fileName = 'receipt.svg';
+      }
+    });
+  });
+  // One seeded submission (the Witness Statement) is left without an attachment on purpose, to show attaching a
+  // document is genuinely optional, not required.
+  Object.keys(DATA.submissions).forEach(mid=>{
+    (DATA.submissions[mid]||[]).forEach(s=>{
+      if(s.kind !== 'Witness Statement' && !s.fileData){
+        s.fileData = mockDocDataUrl(s.kind, [s.title, s.date]);
+        s.fileName = s.title.replace(/[^a-z0-9]+/gi,'_') + '.svg';
+      }
+    });
+  });
+})();
+
+const ROLE_PAGES = {
+  Plaintiff:  ["dashboard","family","agreements","activities","calendar","messaging","notes","journal","expenses","payments","consents","notices","notifications","pending","medicalSettlement","chargesCourtDates","immigrationFilings","negotiation","documents"],
+  Defendant:  ["dashboard","family","agreements","activities","calendar","messaging","notes","journal","expenses","payments","consents","notices","notifications","pending","medicalSettlement","chargesCourtDates","negotiation","documents"],
+  Lawyer:     ["dashboard","legal","agreements","calendar","consents","records","submissions","notifications","pending","medicalSettlement","chargesCourtDates","immigrationFilings","negotiation","documents","payments"],
+  Expert:     ["dashboard","family","notes","journal","calendar","submissions","notifications","pending","medicalSettlement","documents"],
+  Witness:    ["dashboard","legal","records","submissions","notifications","pending","chargesCourtDates","documents"],
+  CourtAdmin: ["dashboard","family","legal","agreements","activities","calendar","messaging","notes","journal","expenses","payments","consents","notices","records","submissions","notifications","pending","medicalSettlement","chargesCourtDates","immigrationFilings","negotiation","documents"]
+};
+
+function currentPartyName(){
+  const p = matter().parties.find(p=>p.role===state.role);
+  return p ? p.name : state.role;
+}
+
+// Matter-contextual example text for form placeholders. Several forms (Expenses, Notices, Calendar, Submissions,
+// Payment Requests) are reachable on every Matter type, not just Family — a Family-flavored example ("Swimming
+// lessons", "Custody handover") reading on a Commercial or Criminal Defense matter breaks the illustration. `ex()`
+// looks up the current matter's type; unrecognized keys/types fall back to the Family example rather than an error.
+const EXAMPLES = {
+  Family: {
+    expenseDesc: "Swimming lessons",
+    noticeTitle: "Change of pickup time",
+    calendarTitle: "Custody handover",
+    subTitleExpert: "Follow-up Parenting Assessment",
+    subTitleWitness: "Statement re: a co-parenting incident",
+    subTitleLawyer: "Motion to Amend Visitation Schedule",
+    paymentRequestReason: "August child support installment — per the Child Support Agreement."
+  },
+  Commercial: {
+    expenseDesc: "Third-party freight inspection fee",
+    noticeTitle: "Delivery schedule change",
+    calendarTitle: "Settlement conference",
+    subTitleExpert: "Monthly Site Inspection — Cascade Logistics Distribution Center",
+    subTitleWitness: "Statement re: the delayed shipment",
+    subTitleLawyer: "Motion to Compel Production of Shipping Records",
+    paymentRequestReason: "Monthly installment #4 of 20 — Interim Payment Plan Agreement."
+  },
+  PersonalInjury: {
+    expenseDesc: "Rental car during vehicle repair",
+    noticeTitle: "Change of treating physician",
+    calendarTitle: "Independent Medical Examination (IME)",
+    subTitleExpert: "Orthopedic Follow-Up Assessment",
+    subTitleWitness: "Statement re: the collision",
+    subTitleLawyer: "Motion for Leave to File Amended Complaint",
+    paymentRequestReason: "Release of the accepted settlement payment following the finalized Demand/Offer."
+  },
+  CriminalDefense: {
+    expenseDesc: "Process server fee — defense witness subpoena",
+    noticeTitle: "Change of pretrial hearing time",
+    calendarTitle: "Pretrial motion hearing",
+    subTitleExpert: "Forensic Evidence Review",
+    subTitleWitness: "Statement re: the traffic altercation",
+    subTitleLawyer: "Motion to Suppress Evidence",
+    paymentRequestReason: "Restitution installment per the plea agreement."
+  },
+  Immigration: {
+    expenseDesc: "Certified translation of birth certificate",
+    noticeTitle: "Biometrics appointment rescheduled",
+    calendarTitle: "USCIS interview",
+    subTitleExpert: "Country-Conditions Expert Opinion",
+    subTitleWitness: "Statement supporting the bona fides of the marriage",
+    subTitleLawyer: "Response to Request for Evidence (RFE)",
+    paymentRequestReason: "Reimbursement for a jointly-owed USCIS filing fee."
+  }
+};
+function ex(key){
+  const mt = matterType();
+  const set = EXAMPLES[mt] || EXAMPLES.Family;
+  return set[key] || EXAMPLES.Family[key] || '';
+}
+
+// Lawyer Directory ads — added per Shehab's direct request: sponsored listings for lawyers practicing in the SAME
+// area of law as the current Matter, shown per-Matter (keyed by matter type, same pattern as EXAMPLES) and located
+// in the actual jurisdiction that Matter's court sits in (not a generic/placeholder city) — e.g. Cook County matters
+// surface Chicago-area family/injury/criminal lawyers, the Commercial matter surfaces Wilmington, DE lawyers where
+// its own court (Delaware Superior Court) actually sits, Immigration surfaces the Chicago USCIS field-office area.
+// Clearly labeled "Sponsored" and shown only to Plaintiff/Defendant (the parties who might actually need to find
+// counsel) — never to Lawyer/CourtAdmin/Expert/Witness, and never mixed into official case data.
+// Avvo Rating — added per Shehab's direct request: real US legal directory (avvo.com) rates lawyers on a 1-10 scale
+// (e.g. "9.4 Superb"). Shown here purely as illustrative ad content, same caveat as every other seeded number.
+const LAWYER_DIRECTORY = {
+  Family: [
+    {name:"Karen Whitfield, Esq.", firm:"Whitfield Family Law Group", specialty:"Family Law — Custody & Child Support", location:"Chicago, IL", phone:"(312) 555-0142", avvoRating:9.4},
+    {name:"Marcus Bellamy, Esq.", firm:"Bellamy & Rourke LLP", specialty:"Family Law — Divorce & Visitation", location:"Evanston, IL", phone:"(847) 555-0198", avvoRating:8.8}
+  ],
+  Commercial: [
+    {name:"Denise Falk, Esq.", firm:"Falk Commercial Litigation Group", specialty:"Commercial Litigation — Contract & Supply Disputes", location:"Wilmington, DE", phone:"(302) 555-0117", avvoRating:9.1},
+    {name:"Thomas Reyes, Esq.", firm:"Reyes Business Law Partners", specialty:"Commercial Litigation — ODR & Settlement", location:"Wilmington, DE", phone:"(302) 555-0164", avvoRating:8.6}
+  ],
+  PersonalInjury: [
+    {name:"Angela Petrov, Esq.", firm:"Petrov Injury Law", specialty:"Personal Injury — Auto & Rideshare Accidents", location:"Chicago, IL", phone:"(312) 555-0173", avvoRating:9.3},
+    {name:"Brian Okonkwo, Esq.", firm:"Okonkwo & Associates", specialty:"Personal Injury — Medical Liens & Settlement", location:"Chicago, IL", phone:"(312) 555-0186", avvoRating:8.9}
+  ],
+  CriminalDefense: [
+    {name:"Lisa Marchetti, Esq.", firm:"Marchetti Criminal Defense", specialty:"Criminal Defense — Felony & Misdemeanor", location:"Chicago, IL", phone:"(312) 555-0129", avvoRating:9.0},
+    {name:"Gregory Huang, Esq.", firm:"Huang Defense Law", specialty:"Criminal Defense — Trial & Bond Hearings", location:"Chicago, IL", phone:"(312) 555-0155", avvoRating:8.7}
+  ],
+  Immigration: [
+    {name:"Rosalind Ferreira, Esq.", firm:"Ferreira Immigration Law", specialty:"Immigration — Adjustment of Status & RFEs", location:"Chicago, IL (USCIS Field Office area)", phone:"(312) 555-0161", avvoRating:9.5},
+    {name:"Samuel Okafor, Esq.", firm:"Okafor Global Immigration Group", specialty:"Immigration — Family-Based Petitions", location:"Chicago, IL (USCIS Field Office area)", phone:"(312) 555-0188", avvoRating:8.8}
+  ]
+};
+function recommendedLawyers(){ return LAWYER_DIRECTORY[matterType()] || []; }
+
+// Map-based location picker — added per Shehab's direct request: location fields must be chosen from a map,
+// automatically, never free-typed. Real reverse-geocoding needs a paid API key this prototype doesn't have, so this
+// is an honest simulation: a real embedded OpenStreetMap view (no key required) for visual context, plus a
+// quick-select list of known addresses actually relevant to this Matter, plus a "current location" simulate button
+// — all of which fill the target field automatically. The target `<input>` stays a real form field (read via the
+// same `.value` the add/submit functions already use) but is marked readonly so it can only be set via the picker.
+const QUICK_LOCATIONS = {
+  Family: [
+    "Riverside Elementary School — 210 Maple Ave, Evanston, IL 60201",
+    "1420 Oakwood Drive, Evanston, IL 60201 (David's residence)",
+    "Home"
+  ],
+  Commercial: [
+    "Cascade Logistics Distribution Center, 4400 Westgate Industrial Pkwy, Wilmington, DE 19808",
+    "Meridian Freight LLC HQ, 100 Harbor Blvd, Wilmington, DE 19801"
+  ],
+  PersonalInjury: [
+    "Northwestern Memorial Hospital, 251 E Huron St, Chicago, IL 60611",
+    "Site of collision — Downtown Chicago, IL"
+  ],
+  CriminalDefense: [
+    "Circuit Court of Cook County — Criminal Division, 2650 S California Ave, Chicago, IL 60608"
+  ],
+  Immigration: [
+    "USCIS Chicago Field Office, 101 W Congress Pkwy, Chicago, IL 60605"
+  ]
+};
+const MAP_CENTERS = { Family:[42.0451,-87.6877], Commercial:[39.7391,-75.5398], PersonalInjury:[41.8781,-87.6298], CriminalDefense:[41.8494,-87.6553], Immigration:[41.8825,-87.6292] };
+let currentMapField = null;
+function openMapPicker(fieldId){
+  currentMapField = fieldId;
+  const center = MAP_CENTERS[matterType()] || MAP_CENTERS.Family;
+  const d = 0.03;
+  const bbox = [center[1]-d, center[0]-d, center[1]+d, center[0]+d].join(',');
+  document.getElementById('mapPickerFrameWrap').innerHTML = `<iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${center[0]},${center[1]}" style="width:100%;height:100%;border:0;"></iframe>`;
+  const known = QUICK_LOCATIONS[matterType()] || QUICK_LOCATIONS.Family;
+  document.getElementById('mapPickerQuickList').innerHTML = '<label style="display:block;font-size:12px;color:var(--text-mute);margin-bottom:4px;">Known locations on this Matter</label>' +
+    known.map(addr=>`<button type="button" class="btn-sm outline" style="display:block;width:100%;text-align:left;margin-bottom:6px;" onclick="pickLocation('${addr.replace(/'/g,"\\'")}')">📍 ${addr}</button>`).join('');
+  document.getElementById('mapPickerOverlay').style.display = 'flex';
+}
+function closeMapPicker(){ document.getElementById('mapPickerOverlay').style.display = 'none'; currentMapField = null; }
+function pickLocation(addr){
+  if(currentMapField){ const el = document.getElementById(currentMapField); if(el) el.value = addr; }
+  closeMapPicker();
+}
+function useCurrentLocationSim(){
+  const known = QUICK_LOCATIONS[matterType()] || QUICK_LOCATIONS.Family;
+  const addr = known[0] || 'Current Location';
+  pickLocation(addr + ' (auto-detected)');
+}
+function locationPickerField(fieldId, isRequired){
+  return `<div style="display:flex;gap:6px;align-items:flex-start;"><input type="text" id="${fieldId}" readonly placeholder="${isRequired?'Choose on map...':'Choose on map... (optional)'}" style="flex:1;"><button type="button" class="btn-sm outline" style="white-space:nowrap;" onclick="openMapPicker('${fieldId}')">📍 Choose on map</button></div>`;
+}
+
+// Court Fee schedule — added per Shehab's direct request: any request/filing TO THE COURT should show its fee
+// up front, not just the one hand-seeded Motion example. Amounts keep the same illustrative $X court fee + $15
+// platform service fee structure the original seeded Motion example used (benchmarked from Tyler/Odyssey's real
+// two-part fee structure) — still not a client-confirmed price, same caveat as the original.
+const COURT_FEE_SCHEDULE = {
+  Motion: {court:45.00, service:15.00, total:60.00},
+  Filing: {court:35.00, service:15.00, total:50.00},
+  Brief: {court:25.00, service:15.00, total:40.00},
+  Correspondence: {court:0.00, service:0.00, total:0.00}
+};
+function updateCourtFeeNote(){
+  const sel = document.getElementById('subType');
+  const out = document.getElementById('subFeeNote');
+  if(!sel || !out) return;
+  const fee = COURT_FEE_SCHEDULE[sel.value];
+  if(!fee || fee.total===0){ out.textContent = 'No court filing fee for this document type.'; return; }
+  out.textContent = `Estimated court fee upon filing: $${fee.total.toFixed(2)} ($${fee.court.toFixed(2)} court filing fee + $${fee.service.toFixed(2)} platform service fee).`;
+}
+// Charges the court fee for a just-filed Legal Document to whichever party it was filed for — pattern mirrors the
+// original seeded Motion example exactly (card pre-authorized on filing, charged by "Court System (automatic)").
+// If that party has no payment method on file, the charge is recorded as Pending rather than silently faked as Paid.
+function chargeCourtFee(docType, title, filedForName){
+  const fee = COURT_FEE_SCHEDULE[docType];
+  if(!fee || fee.total<=0) return;
+  const methods = DATA.paymentMethods[state.matterId]||[];
+  const payerMethod = methods.find(m=>m.party===filedForName);
+  const filedForParty = matter().parties.find(p=>p.name===filedForName);
+  const status = payerMethod ? 'Paid' : 'Pending';
+  const methodLabel = payerMethod ? `${payerMethod.brand} •••• ${payerMethod.last4}` : 'No payment method on file';
+  (DATA.payments[state.matterId]=DATA.payments[state.matterId]||[]).unshift({
+    kind:'Court Fee', desc:`${title} — court filing fee`, relatedTitle:title,
+    breakdown:`Court filing fee $${fee.court.toFixed(2)} + platform service fee $${fee.service.toFixed(2)}`,
+    amount:fee.total, currency:'$',
+    party: filedForName + (filedForParty?` (${filedForParty.role})`:''),
+    filedBy: `${currentPartyName()} (Lawyer${filedForParty?`, on behalf of ${filedForParty.role}`:''})`,
+    chargedBy: status==='Paid' ? 'Court System (auto, on filing acceptance)' : 'Court System (pending — no payment method on file for this party)',
+    method: methodLabel, status, date:'just now',
+    feeLines:[
+      {label:'Court Filing Fee (paid to the court)', amount:fee.court},
+      {label:'Platform Service Fee (charged by this app for filing this request)', amount:fee.service}
+    ],
+    steps:[
+      {label:`Document filed by lawyer — card ${status==='Paid'?'pre-authorized':'NOT available'} for $${fee.total.toFixed(2)}`, who:`${currentPartyName()}${filedForParty?` (on behalf of ${filedForName} / ${filedForParty.role})`:''}`, ts:'just now'}
+    ]
+  });
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Payments", actor:currentPartyName(), action:`Court fee ${status==='Paid'?'captured':'recorded as pending — no card on file'}: $${fee.total.toFixed(2)} for filing "${title}"`});
+}
+
+let state = { matterId:"MAT-0001", role:"Plaintiff", page:"dashboard", detail:{page:null, idx:null} };
+
+function matter(){ return DATA.matters.find(m=>m.id===state.matterId); }
+function chip(text,cls){ return `<span class="chip chip-${cls||'default'}">${text}</span>`; }
+// fmtDT/fmtDate — format real <input type=datetime-local>/<input type=date> values into a readable display string.
+// Added this round: date/time fields across the app were free-typed text ("tomorrow 17:00") — now real pickers,
+// so their raw ISO value is reformatted for display rather than shown as "2026-09-05T17:00".
+function fmtDT(v){
+  if(!v) return v;
+  const d = new Date(v);
+  if(isNaN(d.getTime())) return v;
+  return d.toLocaleString('en-US', {month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'});
+}
+function fmtDate(v){
+  if(!v) return v;
+  const d = new Date(v+'T00:00:00');
+  if(isNaN(d.getTime())) return v;
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+// DEMO_TODAY — fixed reference "today" for due-date/installment math, so the demo reads consistently regardless
+// of the real date the viewer opens the prototype on (matches this round's actual delivery date).
+const DEMO_TODAY = new Date('2026-08-29T09:00:00');
+function daysBetween(isoDate){
+  if(!isoDate) return null;
+  const d = new Date(isoDate+'T00:00:00');
+  if(isNaN(d.getTime())) return null;
+  return Math.round((d - new Date(DEMO_TODAY.toDateString())) / 86400000);
+}
+function dueLabel(isoDate){
+  const n = daysBetween(isoDate);
+  if(n===null) return isoDate || '—';
+  if(n===0) return `${fmtDate(isoDate)} (due today)`;
+  if(n<0) return `${fmtDate(isoDate)} (${Math.abs(n)} day${Math.abs(n)===1?'':'s'} overdue)`;
+  return `${fmtDate(isoDate)} (in ${n} day${n===1?'':'s'})`;
+}
+function addMonths(iso, n){
+  const d = new Date(iso+'T00:00:00');
+  d.setMonth(d.getMonth()+n);
+  return d.toISOString().slice(0,10);
+}
+// Installment Plan — evidenced directly by Ahmed Kareem's own example (partners' debt dispute, paid $5k/month) and
+// mirrored in the seeded Interim Payment Plan Agreement (Agreements) + the pending "installment #4 of 20" Payment
+// Request already on MAT-0002. Built as a real 20-row schedule (not just one narrative row) so remaining-count and
+// due-soon logic have real dates to compute against, anchored to DEMO_TODAY so the demo reads consistently.
+// payerRole: Cascade Logistics Co. (Defendant) is the one who owes payment to Meridian Freight LLC (Plaintiff) per
+// the agreement text — matches the oppositeRole()-owner convention already used everywhere else in this app.
+(function buildInstallmentPlans(){
+  DATA.installmentPlans = {};
+  const plan = { title:"Interim Payment Plan Agreement", totalAmount:100000.00, installmentAmount:5000.00, totalInstallments:20, startDate:"2026-06-01", payerRole:"Defendant" };
+  plan.installments = [];
+  for(let n=0;n<plan.totalInstallments;n++){
+    const due = addMonths(plan.startDate, n);
+    plan.installments.push({ number:n+1, dueDate:due, status: daysBetween(due)<0 ? 'Paid' : 'Upcoming' });
+  }
+  (DATA.installmentPlans["MAT-0002"] = DATA.installmentPlans["MAT-0002"]||[]).push(plan);
+})();
+function installmentPlansHtml(){
+  const plans = DATA.installmentPlans[state.matterId]||[];
+  if(!plans.length) return '';
+  return plans.map(plan=>{
+    const paid = plan.installments.filter(x=>x.status==='Paid').length;
+    const remaining = plan.totalInstallments - paid;
+    const next = plan.installments.find(x=>x.status!=='Paid');
+    return `<h3 style="font-size:14px;color:var(--navy);margin-top:20px;">Installment Plan — ${plan.title}</h3>
+    <p class="subtitle" style="margin-top:-4px;">Real payment schedule generated from the agreement's terms — remaining-installment count and due-soon status are computed live, not hand-typed.</p>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="item"><b>$${plan.installmentAmount.toFixed(2)}/month</b> · Total $${plan.totalAmount.toFixed(2)} over ${plan.totalInstallments} installments
+        <div class="muted" style="margin-top:4px;">${paid} of ${plan.totalInstallments} paid · <b>${remaining} installment${remaining===1?'':'s'} remaining</b>${next?` · Next due: ${dueLabel(next.dueDate)} (owed by ${plan.payerRole})`:' · Fully paid'}</div>
+      </div>
+    </div>
+    <table><tr><th>#</th><th>Due Date</th><th>Amount</th><th>Status</th></tr>
+    ${plan.installments.map(x=>{const dd=daysBetween(x.dueDate); const dueSoon = x.status!=='Paid' && dd!==null && dd<=7; return `<tr><td>${x.number}</td><td>${fmtDate(x.dueDate)}</td><td>$${plan.installmentAmount.toFixed(2)}</td><td>${chip(dueSoon?'Due Soon':x.status, x.status==='Paid'?'success':dueSoon?'warning':'default')}</td></tr>`;}).join('')}
+    </table>`;
+  }).join('');
+}
+// Live installment due-date notifications — computed fresh on every render (not a stale seeded notification) so
+// switching Matter/role always reflects the real current schedule state relative to DEMO_TODAY.
+function computeInstallmentNotifications(){
+  const notes = [];
+  const plans = DATA.installmentPlans[state.matterId]||[];
+  plans.forEach(plan=>{
+    const paid = plan.installments.filter(x=>x.status==='Paid').length;
+    const remaining = plan.totalInstallments - paid;
+    const next = plan.installments.find(x=>x.status!=='Paid');
+    if(!next) return;
+    const n = daysBetween(next.dueDate);
+    if(n!==null && n<=7){
+      notes.push({ title:`Installment ${next.number} of ${plan.totalInstallments} due — ${dueLabel(next.dueDate)}. ${remaining} installment${remaining===1?'':'s'} remaining.`, owner:plan.payerRole, due:dueLabel(next.dueDate) });
+    }
+  });
+  return notes;
+}
+// Matter type — explicit field (Family/Commercial/PersonalInjury/CriminalDefense/Immigration), see DATA.matters
+// comment above for why. isFamilyMatter() kept as a thin wrapper (minimal diff for existing callers).
+function matterType(){ return matter().type; }
+function isFamilyMatter(){ return matterType()==='Family'; }
+function allowed(page){
+  if(!ROLE_PAGES[state.role].includes(page)) return false;
+  const mt = matterType();
+  if((page==='notes' || page==='activities' || page==='journal') && mt!=='Family') return false;
+  // Consents' predefined dropdown (Travel/Doctor/School) is family-specific — already a known flagged gap on the
+  // Commercial matter from an earlier round (not silently invented a fix for); not spreading that same mismatch to
+  // the 3 new matter types this round, so Consents stays Family+Commercial only.
+  if(page==='consents' && mt!=='Family' && mt!=='Commercial') return false;
+  // Messaging shows ONE shared thread to every party with matter access — correct for Family/Commercial/PersonalInjury
+  // (civil, two-sided, nothing privileged), but WRONG for CriminalDefense/Immigration where Defendant-Lawyer or
+  // Petitioner-Lawyer communication needs real privacy/privilege separation this simple shared-thread model doesn't
+  // provide. Gated off rather than silently exposing privileged communication.
+  if(page==='messaging' && !['Family','Commercial','PersonalInjury'].includes(mt)) return false;
+  if(page==='medicalSettlement' && mt!=='PersonalInjury') return false;
+  if(page==='chargesCourtDates' && mt!=='CriminalDefense') return false;
+  if(page==='immigrationFilings' && mt!=='Immigration') return false;
+  if(page==='negotiation' && mt!=='Commercial') return false;
+  return true;
+}
+
+// ToneMeter — lightweight flagged-language check, run client-side as the user types. Pattern benchmarked from
+// OurFamilyWizard's ToneMeter (Messages + Journal composers). Never blocks sending — advisory only.
+const TONE_FLAG_WORDS = ["stupid","hate","idiot","never","always","ridiculous","pathetic","liar","lazy","worthless","shut up","screw you"];
+function toneCheckHits(text){
+  const lower = (text||'').toLowerCase();
+  return TONE_FLAG_WORDS.filter(w=>lower.includes(w));
+}
+function updateToneMeter(inputId, outId){
+  const el = document.getElementById(inputId);
+  const out = document.getElementById(outId);
+  if(!el || !out) return;
+  const hits = toneCheckHits(el.value);
+  out.innerHTML = hits.length
+    ? `<div class="alert alert-error" style="padding:6px 10px;font-size:12px;margin:-2px 0 8px;">🔴 ToneMeter: this may read as emotionally charged — flagged: "${hits.join('", "')}". You can still send, but consider rephrasing.</div>`
+    : (el.value.trim() ? `<div class="muted" style="font-size:11.5px;margin:-2px 0 8px;">🟢 ToneMeter — tone looks fine.</div>` : '');
+}
+
+// Generic click-through detail pattern — used by Agreements, Consents, Submissions.
+// Whatever the signed-in role/Matter can see in the list is exactly what the detail view can see (same RBAC gate as the list itself).
+function viewDetail(page, idx){ state.detail = {page, idx}; render(); }
+function closeDetail(){ state.detail = {page:null, idx:null}; render(); }
+function relatedAudit(matterId, matchText){
+  return (DATA.audit[matterId]||[]).filter(a => a.action && matchText && a.action.toLowerCase().includes(matchText.toLowerCase()));
+}
+
+// Approve/Reject + reason — added this round: pending items only linked back to their source module with no direct
+// decision surface, and decisions never captured a reason. `actionModal` tracks which item is being decided; the
+// reason is required to reject, optional to approve, and is stored on the record + written to the audit log.
+const ACTIONABLE_PENDING_KINDS = ['consent','schedule','expense','negotiation','paymentRequest'];
+let actionModal = null; // {kind, idx, decision}
+function openActionModal(kind, idx, decision){ actionModal = {kind, idx, decision}; render(); }
+function cancelActionModal(){ actionModal = null; render(); }
+function confirmActionModal(){
+  if(!actionModal) return;
+  const {kind, idx, decision} = actionModal;
+  const reasonEl = document.getElementById('actionReason');
+  const errEl = document.getElementById('actionReasonErr');
+  const reason = reasonEl ? reasonEl.value.trim() : '';
+  if(decision==='reject' && !reason){ if(errEl) errEl.textContent = "Enter a reason before rejecting."; return; }
+  actionModal = null;
+  if(kind==='consent') decideConsent(idx, decision==='approve', reason);
+  else if(kind==='schedule') decideScheduleChange(idx, decision==='approve', reason);
+  else if(kind==='expense') decideExpenseReimbursement(idx, decision==='approve', reason);
+  else if(kind==='negotiation'){ if(decision==='approve') startSigning(idx); else decideOffer(idx, 'Rejected', reason); }
+  else if(kind==='paymentRequest'){ if(decision==='approve') payPaymentRequest(idx); else declinePaymentRequest(idx, reason); }
+}
+function actionModalHtml(kind, idx){
+  if(!actionModal || actionModal.kind!==kind || actionModal.idx!==idx) return '';
+  const isReject = actionModal.decision==='reject';
+  return `<div class="formbox" onclick="event.stopPropagation()" style="margin:8px 0 0;padding:10px 12px;border-color:${isReject?'var(--red)':'var(--teal)'};">
+    <label>${isReject ? 'Reason for rejecting (required)' : 'Reason / note (optional)'}</label>
+    <textarea id="actionReason" placeholder="${isReject?'Explain why you are rejecting this...':'Add an optional note...'}"></textarea>
+    <div class="err-text" id="actionReasonErr"></div>
+    <div class="inline-actions"><button class="btn-sm" onclick="confirmActionModal()">${isReject?'Confirm Reject':'Confirm'}</button><button class="btn-sm outline" onclick="cancelActionModal()">Cancel</button></div>
+  </div>`;
+}
+
+const NAV = [
+  {sec:"", items:[["dashboard","Dashboard"]]},
+  {sec:"Matter", items:[["family","Family / Party Info"],["legal","Legal Case Info"],["agreements","Agreements"]]},
+  {sec:"Case-Specific", items:[["medicalSettlement","Medical Treatment & Settlement"],["chargesCourtDates","Charges & Court Dates"],["immigrationFilings","Immigration Filings"],["negotiation","Negotiation & Settlement"]]},
+  {sec:"Schedule", items:[["activities","Activities"],["calendar","Calendar"]]},
+  {sec:"Communication", items:[["messaging","Messaging"],["notes","Children's Notes Board"],["journal","Journal"],["notices","Notices"]]},
+  {sec:"Money", items:[["expenses","Expenses"],["payments","Payment Methods & Charges"]]},
+  {sec:"Approvals", items:[["consents","Consents"],["pending","Pending Actions"]]},
+  {sec:"My Submissions", items:[["submissions","Reports / Statements / Filings"]]},
+  {sec:"Records", items:[["documents","Documents"],["records","Records Export"],["notifications","Notification Center"]]}
+];
+
+// Nav badge counts — surfaces "what's required of you" right in the sidebar, not just buried inside each page.
+// Only counts items actually owned by / addressed to the current role, so it never over-alarms someone who has
+// nothing to do.
+function navBadgeCounts(){
+  const pend = allowed('pending') ? computeLivePending().filter(p=>p.owner===state.role).length : 0;
+  const msgs = allowed('messaging') ? (DATA.messages[state.matterId]||[]).filter(t=>{const last=t.msgs[t.msgs.length-1]; return last && !last.viewed;}).length : 0;
+  const notif = allowed('notifications') ? (DATA.notifications[state.matterId]||[]).filter(n=>!n.read && (!n.forRole || n.forRole===state.role)).length + computeInstallmentNotifications().filter(n=>!n.owner || n.owner===state.role).length : 0;
+  return {pending:pend, messaging:msgs, notifications:notif};
+}
+function renderSidebar(){
+  let html = "";
+  const famMatter = isFamilyMatter();
+  const badges = navBadgeCounts();
+  NAV.forEach(g=>{
+    const items = g.items.filter(([key])=>allowed(key));
+    if(!items.length) return;
+    if(g.sec) html += `<div class="grp">${g.sec}</div>`;
+    items.forEach(([key,label])=>{
+      const shownLabel = (key==='family' && !famMatter) ? 'Party & Case Info' : label;
+      const count = badges[key] || 0;
+      const badge = count>0 ? `<span class="nav-badge">${count}</span>` : '';
+      html += `<button class="navitem ${state.page===key?'active':''}" onclick="goPage('${key}')">${shownLabel}${badge}</button>`;
+    });
+  });
+  document.getElementById('sidebar').innerHTML = html;
+}
+
+function goPage(p){ state.page = p; state.detail = {page:null, idx:null}; render(); }
+function onMatterChange(id){
+  state.matterId = id;
+  if(!allowed(state.page)) state.page = "dashboard";
+  state.detail = {page:null, idx:null};
+  render();
+}
+function onRoleChange(r){
+  state.role = r;
+  if(!allowed(state.page)) state.page = "dashboard";
+  state.detail = {page:null, idx:null};
+  render();
+}
+
+function renderTopControls(){
+  const sel = document.getElementById('matterSelect');
+  sel.innerHTML = DATA.matters.map(m=>`<option value="${m.id}" ${m.id===state.matterId?'selected':''}>${m.title}</option>`).join('');
+  document.getElementById('roleSelect').value = state.role;
+  const unread = (DATA.notifications[state.matterId]||[]).filter(n=>!n.read && (!n.forRole || n.forRole===state.role)).length;
+  const liveInstallmentUnread = computeInstallmentNotifications().filter(n=>!n.owner || n.owner===state.role).length;
+  document.getElementById('notifCount').textContent = unread + liveInstallmentUnread;
+}
+
+// "What's required of you" hero — added per direct user feedback: as a logged-in end user (e.g. Plaintiff), the
+// old dashboard listed items but never gave a strong, at-a-glance visual signal of what's actually owed of them.
+// Built from the SAME live data computeLivePending()/unread-messages already compute — no new fake counters.
+function dashboardHero(pend, unreadMsgs){
+  const myActions = pend.filter(p=>p.owner===state.role);
+  const overdue = myActions.filter(p=>/overdue/.test(p.due));
+  const cal = (DATA.calendar[state.matterId]||[]);
+  const soon = cal.filter(e=>{ const n=daysBetween((e.start||'').slice(0,10)); return n!==null && n>=0 && n<=7; }).length;
+
+  if(myActions.length===0 && unreadMsgs.length===0 && overdue.length===0){
+    return `<div class="hero-banner">✅ You're all caught up on this Matter — nothing needs your action right now.</div>`;
+  }
+  const tiles = [];
+  if(overdue.length) tiles.push(`<div class="hero-tile urgent"><div class="hero-num">${overdue.length}</div><div class="hero-label">Overdue — Act Now</div><div class="hero-sub">Past their due date</div></div>`);
+  tiles.push(`<div class="hero-tile action"><div class="hero-num">${myActions.length}</div><div class="hero-label">Needs Your Action</div><div class="hero-sub">Approvals, payments & requests waiting on you</div></div>`);
+  if(unreadMsgs.length) tiles.push(`<div class="hero-tile info"><div class="hero-num">${unreadMsgs.length}</div><div class="hero-label">Unread Messages</div><div class="hero-sub">In Messaging</div></div>`);
+  if(soon) tiles.push(`<div class="hero-tile calm"><div class="hero-num">${soon}</div><div class="hero-label">Coming Up (7 days)</div><div class="hero-sub">Calendar events</div></div>`);
+  return `<div class="hero">${tiles.join('')}</div>`;
+}
+function pageDashboard(){
+  const m = matter();
+  const pend = computeLivePending();
+  const cal = DATA.calendar[state.matterId]||[];
+  const audit = (DATA.audit[state.matterId]||[]).slice(0,5);
+  const msgs = DATA.messages[state.matterId]||[];
+  const unreadMsgs = msgs.filter(t=>{const last=t.msgs[t.msgs.length-1]; return last && !last.viewed;});
+  const openConsents = (DATA.consents[state.matterId]||[]).filter(c=>c.status==='Pending');
+
+  const cards = [];
+  if(allowed('pending')) cards.push(`<div class="card"><h3>Pending Actions</h3>
+      ${pend.length? pend.map(p=>`<div class="item" style="${p.owner===state.role?'border-left:3px solid var(--amber);background:#FFFBEB;':''}"><b>${p.title}</b><div class="muted">${p.owner===state.role?'👉 <b>Waiting on you</b>':'Owner: '+p.owner} · Due ${p.due}</div>${p.owner===state.role?`<div style="margin-top:6px;">${pendingActionCell(p)}</div>`:''}</div>`).join('') : '<div class="muted">No pending actions.</div>'}
+    </div>`);
+  if(allowed('calendar')) cards.push(`<div class="card"><h3>Upcoming Calendar</h3>
+      ${cal.length? cal.map(e=>`<div class="item">${e.legend} <b>${e.title}</b><div class="muted">${e.start}</div></div>`).join('') : '<div class="muted">No upcoming events.</div>'}
+    </div>`);
+  if(allowed('records')) cards.push(`<div class="card"><h3>Recent Activity (Audit)</h3>
+      ${audit.length? audit.map(a=>`<div class="item"><b>${a.module}</b> — ${a.action}<div class="muted">${a.actor} · ${a.ts}</div></div>`).join('') : '<div class="muted">No recent activity.</div>'}
+    </div>`);
+  if(allowed('messaging')) cards.push(`<div class="card"><h3>Unread Messages</h3>
+      ${unreadMsgs.length? unreadMsgs.map(t=>{const last=t.msgs[t.msgs.length-1];return `<div class="item"><b>${t.subject}</b><div class="muted">From ${last.from} · ${last.sent}</div></div>`;}).join('') : '<div class="muted">No unread messages.</div>'}
+    </div>`);
+  if(allowed('consents')) cards.push(`<div class="card"><h3>Open Consent Requests</h3>
+      ${openConsents.length? openConsents.map(c=>`<div class="item"><b>${c.subject}</b> — requested by ${c.by}<div class="muted">${c.date}</div></div>`).join('') : '<div class="muted">No open consent requests.</div>'}
+    </div>`);
+  if(allowed('medicalSettlement')){
+    const ledger = (DATA.settlement[state.matterId]||[]).slice(0,4);
+    cards.push(`<div class="card"><h3>Settlement Negotiation</h3>
+      ${ledger.length? ledger.map(e=>`<div class="item">${chip(e.kind,e.kind==='Lien'?'error':e.kind==='Offer'?'primary':'default')} <b>$${e.amount.toFixed(2)}</b><div class="muted">${e.by} · ${e.date}</div></div>`).join('') : '<div class="muted">No settlement activity yet.</div>'}
+    </div>`);
+  }
+  if(allowed('chargesCourtDates')){
+    const upcoming = (DATA.calendar[state.matterId]||[]).filter(e=>['Arraignment','Pretrial-Hearing','Trial','Sentencing'].includes(e.cat));
+    cards.push(`<div class="card"><h3>Upcoming Court Dates</h3>
+      ${upcoming.length? upcoming.map(e=>`<div class="item">${e.legend} <b>${e.title}</b><div class="muted">${e.start}</div></div>`).join('') : '<div class="muted">No court dates scheduled.</div>'}
+    </div>`);
+  }
+  if(allowed('immigrationFilings')){
+    const openRfes = (DATA.rfeTracking[state.matterId]||[]).filter(r=>r.status==='Open');
+    cards.push(`<div class="card"><h3>Open RFEs</h3>
+      ${openRfes.length? openRfes.map(r=>`<div class="item"><b>${r.relatedForm}</b><div class="muted">Deadline: ${r.deadline}</div></div>`).join('') : '<div class="muted">No open RFEs.</div>'}
+    </div>`);
+  }
+  if(allowed('negotiation')){
+    const pendingOffers = (DATA.negotiation[state.matterId]||[]).filter(o=>o.status==='Pending');
+    cards.push(`<div class="card"><h3>Pending Settlement Offers</h3>
+      ${pendingOffers.length? pendingOffers.map(o=>`<div class="item"><b>$${o.amount.toFixed(2)}</b> — ${o.by}<div class="muted">${o.date}</div></div>`).join('') : '<div class="muted">No pending offers.</div>'}
+    </div>`);
+  }
+  if(['Plaintiff','Defendant'].includes(state.role)){
+    const lw = recommendedLawyers();
+    if(lw.length) cards.push(`<div class="card"><h3>Find a Lawyer Near You ${chip('Sponsored','default')}</h3>
+      <p class="muted" style="margin:-4px 0 8px;">Lawyers practicing ${matterType()} law near ${m.court.split('—')[0].trim()}.</p>
+      ${lw.map(l=>`<div class="item"><b>${l.name}</b> — ${l.firm} ${chip('⭐ Avvo '+l.avvoRating.toFixed(1),'success')}<div class="muted">${l.specialty}<br>📍 ${l.location} · ☎ ${l.phone}</div></div>`).join('')}
+    </div>`);
+  }
+
+  return `
+  <h2>Dashboard</h2>
+  <p class="subtitle">${m.title} · ${m.caseNumber} · Viewing as <b>${state.role}</b></p>
+  ${dashboardHero(pend, unreadMsgs)}
+  <div class="grid">${cards.join('') || '<div class="muted">No dashboard widgets are configured for this role.</div>'}</div>`;
+}
+
+function pageFamily(){
+  const m = matter();
+  const bank = DATA.infoBank[state.matterId]||[];
+  const familyMatter = isFamilyMatter();
+  return `<h2>${familyMatter ? 'Family / Party Basic Information' : 'Party & Case Information'}</h2>
+  <p class="subtitle">${familyMatter ? 'Info Bank — shared reference details for this Matter (pattern benchmarked from AppClose / TalkingParents "Info Library").' : 'Reference details for the parties and case on this Matter.'}</p>
+  <div class="grid">${m.parties.map(p=>`<div class="party-card"><b>${p.name}</b><div>${chip(p.role,'primary')}</div><div class="muted" style="margin-top:4px;">${p.contact}</div></div>`).join('')}</div>
+  <table><tr><th>Category</th><th>Label</th><th>Value</th></tr>
+  ${bank.map(b=>`<tr><td>${b.cat}</td><td>${b.label}</td><td>${b.val}</td></tr>`).join('')}
+  </table>`;
+}
+
+function pageLegal(){
+  const m = matter();
+  // Immigration matters aren't litigation — there's no "court", the matter is filed with a USCIS field office, and
+  // the case number is a USCIS receipt number, not a docket number. Labels reflect that instead of forcing
+  // litigation terminology onto a non-litigation matter type.
+  const isImmigration = matterType()==='Immigration';
+  const canManageParties = ['Lawyer','CourtAdmin'].includes(state.role);
+  return `<h2>Legal Case Information</h2>
+  <p class="subtitle">Matter-level case record — pattern benchmarked from legal matter-management platforms (Clio/MyCase "Matter" object).</p>
+  <table>
+    <tr><td><b>Matter Title</b></td><td>${m.title}</td></tr>
+    <tr><td><b>${isImmigration ? 'USCIS Receipt Number' : 'Case Number'}</b></td><td>${m.caseNumber}</td></tr>
+    <tr><td><b>${isImmigration ? 'Filing Office' : 'Court / Jurisdiction'}</b></td><td>${m.court}</td></tr>
+    <tr><td><b>Status</b></td><td>${chip(m.status,'success')}</td></tr>
+    <tr><td><b>Opened On</b></td><td>${m.opened}</td></tr>
+  </table>
+  <h3 style="margin-top:20px;">Parties on this Matter (role-scoped access)</h3>
+  <table><tr><th>Name</th><th>Role</th><th>Contact</th></tr>
+  ${m.parties.map(p=>`<tr><td>${p.name}</td><td>${chip(p.role)}</td><td>${p.contact}</td></tr>`).join('')}
+  </table>
+  ${state.role==='CourtAdmin' ? `
+  <div class="formbox" style="margin-top:16px;"><h3>Create a new Matter</h3>
+    <p class="muted" style="margin:-4px 0 10px;">Matches the client consultant's own explanation of the app's architecture: an account holder creates a Matter, then invites others whose access is scoped to that Matter. Appears immediately in the Matter selector above once created.</p>
+    <label>Title</label><input type="text" id="newMatTitle" placeholder="e.g. Whitmore v. Coastal Builders LLC">
+    <label>Type</label>
+    <select id="newMatType"><option value="Family">Family</option><option value="Commercial">Commercial</option><option value="PersonalInjury">Personal Injury</option><option value="CriminalDefense">Criminal Defense</option><option value="Immigration">Immigration</option></select>
+    <label>Case Number</label><input type="text" id="newMatCaseNum" placeholder="e.g. 2026-CC-04455">
+    <label>Court / Jurisdiction</label><input type="text" id="newMatCourt" placeholder="e.g. Delaware Superior Court — Commercial Division">
+    <label>Plaintiff / Primary Party Name</label><input type="text" id="newMatPlaintiff" placeholder="e.g. Full name or company name">
+    <label>Plaintiff Contact (email or phone)</label><input type="text" id="newMatPlaintiffContact" placeholder="e.g. name@example.com or +1 555-0100">
+    <label>Defendant Name (leave blank if not applicable, e.g. Immigration)</label><input type="text" id="newMatDefendant" placeholder="e.g. Full name or company name">
+    <label>Defendant Contact (email or phone)</label><input type="text" id="newMatDefendantContact" placeholder="e.g. name@example.com or +1 555-0100">
+    <div class="err-text" id="newMatErr"></div>
+    <button class="btn-sm" onclick="createMatter()">Create Matter</button>
+  </div>` : ''}
+  ${canManageParties ? `
+  <div class="formbox" style="margin-top:16px;"><h3>Add a stakeholder to this Matter</h3>
+    <p class="muted" style="margin:-4px 0 10px;">Allocates a new person's access to THIS Matter specifically — not the whole account. Benchmarked directly from the client's own U.S. legal consultant's explanation: inviting someone grants access scoped to the Matter, not to every case on the account.</p>
+    <label>Name</label><input type="text" id="stkName" placeholder="e.g. ${matterType()==='Family' ? 'Dr. Maria Chen — Child Guardian ad Litem' : matterType()==='Commercial' ? 'Additional counsel or auditor name' : 'Full name'}">
+    <label>Role / Relationship</label>
+    <select id="stkRole">
+      <option>Witness</option><option>Expert</option><option>Lawyer</option>
+      <option>Guardian</option><option>Social Worker</option><option>Other</option>
+    </select>
+    <label>Contact (email)</label><input type="text" id="stkContact" placeholder="e.g. name@example.com">
+    <div class="err-text" id="stkErr"></div>
+    <button class="btn-sm" onclick="addStakeholder()">Add stakeholder</button>
+  </div>` : ''}`;
+}
+function createMatter(){
+  const title = document.getElementById('newMatTitle').value.trim();
+  const type = document.getElementById('newMatType').value;
+  const caseNumber = document.getElementById('newMatCaseNum').value.trim();
+  const court = document.getElementById('newMatCourt').value.trim();
+  const plaintiffName = document.getElementById('newMatPlaintiff').value.trim();
+  const plaintiffContact = document.getElementById('newMatPlaintiffContact').value.trim();
+  const defendantName = document.getElementById('newMatDefendant').value.trim();
+  const defendantContact = document.getElementById('newMatDefendantContact').value.trim();
+  const errEl = document.getElementById('newMatErr');
+  if(!title || !caseNumber || !court || !plaintiffName){ errEl.textContent = "Enter at least a title, case number, court/jurisdiction, and the primary party's name."; return; }
+  errEl.textContent = "";
+  const nums = DATA.matters.map(m=>parseInt(m.id.split('-')[1],10)).filter(n=>!isNaN(n));
+  const id = 'MAT-' + String((nums.length?Math.max(...nums):0)+1).padStart(4,'0');
+  const parties = [{name:plaintiffName, role:'Plaintiff', contact: plaintiffContact || '—'}];
+  if(defendantName) parties.push({name:defendantName, role:'Defendant', contact: defendantContact || '—'});
+  DATA.matters.push({ id, type, title, caseNumber, court, status:'Active', opened:'today', parties });
+  DATA.infoBank[id]=[]; DATA.agreements[id]=[]; DATA.activities[id]=[]; DATA.calendar[id]=[]; DATA.scheduleRequests[id]=[];
+  DATA.messages[id]=[]; DATA.notes[id]=[]; DATA.journal[id]=[]; DATA.expenses[id]=[]; DATA.consents[id]=[]; DATA.notices[id]=[];
+  DATA.audit[id]=[{ts:"just now", module:"System", actor:currentPartyName(), action:`Matter created: ${title}`}];
+  DATA.notifications[id]=[]; DATA.submissions[id]=[]; DATA.paymentMethods[id]=[]; DATA.payments[id]=[];
+  DATA.negotiation[id]=[]; DATA.paymentRequests[id]=[];
+  state.matterId = id;
+  state.page = 'dashboard';
+  state.detail = {page:null, idx:null};
+  render();
+}
+function addStakeholder(){
+  const name = document.getElementById('stkName').value.trim();
+  const role = document.getElementById('stkRole').value;
+  const contact = document.getElementById('stkContact').value.trim();
+  const errEl = document.getElementById('stkErr');
+  if(!name){ errEl.textContent = "Enter a name before adding."; return; }
+  errEl.textContent = "";
+  matter().parties.push({name, role, contact: contact || '—'});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Case Parties", actor:currentPartyName(), action:`Added a new stakeholder to this Matter: ${name} (${role}) — access allocated to this Matter only`});
+  render();
+}
+
+// ===== Matter-type-specific pages added this round =====
+
+function pageMedicalSettlement(){
+  const treatment = DATA.medicalTreatment[state.matterId]||[];
+  const ledger = DATA.settlement[state.matterId]||[];
+  const canAddTreatment = ['Plaintiff','Lawyer','CourtAdmin'].includes(state.role);
+  const canAddLedger = ['Plaintiff','Defendant','Lawyer','CourtAdmin'].includes(state.role);
+  const st = s => (s==='Resolved'||s==='Paid') ? 'success' : (s==='Outstanding'||s==='Pending Final Demand') ? 'error' : 'warning';
+  return `<h2>Medical Treatment & Settlement</h2>
+  <p class="subtitle">Provider/treatment tracking plus a combined demand/offer/lien negotiation ledger — benchmarked from 8am CasePeer's personal-injury workflow. Illustrative only: no real Protected Health Information is stored here; a production build handling real medical records would need HIPAA-compliant storage and access controls.</p>
+  <h3 style="font-size:14px;color:var(--navy);">Medical Treatment</h3>
+  ${canAddTreatment ? `<div class="formbox"><h3>Add a treatment record as ${currentPartyName()}</h3>
+    <label>Provider</label><input type="text" id="medProvider" placeholder="e.g. Riverside Physical Therapy">
+    <label>Date</label><input type="date" id="medDate">
+    <label>Treatment</label><input type="text" id="medTreatment" placeholder="e.g. Physical therapy — session 4 of 12">
+    <label>Bill Amount ($)</label><input type="number" id="medAmt" placeholder="0.00">
+    <div class="err-text" id="medErr"></div>
+    <button class="btn-sm" onclick="addMedicalTreatment()">Add treatment record</button>
+  </div>` : ''}
+  <table><tr><th>Provider</th><th>Date</th><th>Treatment</th><th>Bill</th><th>Status</th></tr>
+  ${treatment.map(t=>`<tr><td>${t.provider}</td><td>${t.date}</td><td>${t.treatment}</td><td>$${t.billAmount.toFixed(2)}</td><td>${chip(t.status,'default')}</td></tr>`).join('') || `<tr><td colspan="5" class="muted">No medical treatment logged.</td></tr>`}
+  </table>
+  <h3 style="font-size:14px;color:var(--navy);margin-top:22px;">Settlement Negotiation & Liens</h3>
+  ${canAddLedger ? `<div class="formbox"><h3>Log a settlement entry as ${currentPartyName()}</h3>
+    <label>Kind</label><select id="setKind"><option value="Demand">Demand</option><option value="Offer">Offer</option><option value="Lien">Lien</option></select>
+    <label>Amount ($)</label><input type="number" id="setAmt" placeholder="0.00">
+    <label>Notes</label><textarea id="setNotes" placeholder="Describe the demand/offer/lien..."></textarea>
+    <div class="err-text" id="setErr"></div>
+    <button class="btn-sm" onclick="addSettlementEntry()">Log entry</button>
+  </div>` : ''}
+  <table><tr><th>Kind</th><th>By</th><th>Amount</th><th>Status</th><th>Date</th><th>Notes</th>${canAddLedger?'<th>Action</th>':''}</tr>
+  ${ledger.map((e,i)=>`<tr><td>${chip(e.kind, e.kind==='Lien'?'error':e.kind==='Offer'?'primary':'default')}</td><td>${e.by}</td><td>$${e.amount.toFixed(2)}</td><td>${chip(e.status,st(e.status))}</td><td>${e.date}</td><td>${e.notes}</td>${canAddLedger?`<td>${(e.status!=='Resolved') ? `<button class="btn-sm outline" onclick="resolveSettlementEntry(${i})">Mark resolved</button>` : '<span class="muted">—</span>'}</td>`:''}</tr>`).join('') || `<tr><td colspan="${canAddLedger?7:6}" class="muted">No settlement activity logged.</td></tr>`}
+  </table>`;
+}
+function addMedicalTreatment(){
+  const provider = document.getElementById('medProvider').value.trim();
+  const date = document.getElementById('medDate').value;
+  const treatment = document.getElementById('medTreatment').value.trim();
+  const amt = parseFloat(document.getElementById('medAmt').value);
+  const errEl = document.getElementById('medErr');
+  if(!provider || !treatment || isNaN(amt) || amt<=0){ errEl.textContent = "Add a provider, treatment description, and a valid bill amount."; return; }
+  errEl.textContent = "";
+  (DATA.medicalTreatment[state.matterId]=DATA.medicalTreatment[state.matterId]||[]).unshift({provider, date: date||'just now', treatment, billAmount:amt, status:'Billed'});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Medical Treatment", actor:currentPartyName(), action:`Logged treatment record: ${provider} — ${treatment}`});
+  render();
+}
+function addSettlementEntry(){
+  const kind = document.getElementById('setKind').value;
+  const amt = parseFloat(document.getElementById('setAmt').value);
+  const notes = document.getElementById('setNotes').value.trim();
+  const errEl = document.getElementById('setErr');
+  if(isNaN(amt) || amt<=0 || !notes){ errEl.textContent = "Enter a valid amount and some notes before logging."; return; }
+  errEl.textContent = "";
+  (DATA.settlement[state.matterId]=DATA.settlement[state.matterId]||[]).unshift({kind, by:currentPartyName(), amount:amt, date:'just now', status: kind==='Lien' ? 'Outstanding' : 'Sent', notes});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Settlement", actor:currentPartyName(), action:`Logged ${kind}: $${amt.toFixed(2)}`});
+  render();
+}
+function resolveSettlementEntry(i){
+  const rows = DATA.settlement[state.matterId]||[];
+  const e = rows[i];
+  if(!e) return;
+  e.status = 'Resolved';
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Settlement", actor:currentPartyName(), action:`Marked resolved: ${e.kind} — $${e.amount.toFixed(2)}`});
+  render();
+}
+
+function pageChargesCourtDates(){
+  const charges = DATA.charges[state.matterId]||[];
+  const bail = DATA.bailStatus[state.matterId];
+  const courtDates = (DATA.calendar[state.matterId]||[]).filter(e=>['Arraignment','Pretrial-Hearing','Trial','Sentencing'].includes(e.cat));
+  const canUpdateBail = ['Lawyer','CourtAdmin'].includes(state.role);
+  return `<h2>Charges & Court Dates</h2>
+  <p class="subtitle">Charges as filed by the State, bail/bond status, and upcoming court dates — benchmarked from Filevine's criminal-defense caseload tools. Charges are read-only here (they're filed by the prosecution, not editable by any app user) — modeling the real process, not a generic "create" form.</p>
+  <table><tr><th>Count</th><th>Charge</th><th>Statute</th><th>Plea</th></tr>
+  ${charges.map(c=>`<tr><td>${c.count}</td><td>${c.charge}</td><td>${c.statute}</td><td>${chip(c.plea,'warning')}</td></tr>`).join('') || `<tr><td colspan="4" class="muted">No charges on file.</td></tr>`}
+  </table>
+  <h3 style="font-size:14px;color:var(--navy);margin-top:20px;">Bail / Bond Status</h3>
+  ${bail ? `<div class="card"><div class="item"><b>${bail.status}</b> — ${bail.bondType}, $${bail.amount.toFixed(2)}<div class="muted" style="margin-top:4px;">${bail.conditions}</div><div class="muted" style="margin-top:4px;">Last updated: ${bail.lastUpdated}</div></div></div>` : '<div class="muted">No bail/bond record on file.</div>'}
+  ${canUpdateBail ? `<div class="formbox" style="margin-top:14px;"><h3>Update bail/bond status</h3>
+    <label>Status</label><input type="text" id="bailStatusInput" placeholder="e.g. Released on Bond" value="${bail?bail.status:''}">
+    <label>Conditions</label><textarea id="bailConditions" placeholder="Update conditions...">${bail?bail.conditions:''}</textarea>
+    <div class="err-text" id="bailErr"></div>
+    <button class="btn-sm" onclick="updateBailStatus()">Save update</button>
+  </div>` : ''}
+  <h3 style="font-size:14px;color:var(--navy);margin-top:20px;">Court Dates</h3>
+  <table><tr><th>Legend</th><th>Hearing</th><th>Type</th><th>Start</th><th>End</th></tr>
+  ${courtDates.map(e=>`<tr><td>${e.legend}</td><td>${e.title}</td><td>${e.cat}</td><td>${e.start}</td><td>${e.end}</td></tr>`).join('') || `<tr><td colspan="5" class="muted">No court dates scheduled.</td></tr>`}
+  </table>`;
+}
+function updateBailStatus(){
+  const status = document.getElementById('bailStatusInput').value.trim();
+  const conditions = document.getElementById('bailConditions').value.trim();
+  const errEl = document.getElementById('bailErr');
+  if(!status){ errEl.textContent = "Enter a status before saving."; return; }
+  errEl.textContent = "";
+  const existing = DATA.bailStatus[state.matterId] || {};
+  DATA.bailStatus[state.matterId] = Object.assign({}, existing, { status, conditions, lastUpdated: 'just now' });
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Bail/Bond", actor:currentPartyName(), action:`Updated bail/bond status: ${status}`});
+  render();
+}
+
+function pageImmigrationFilings(){
+  const filings = DATA.immigrationFilings[state.matterId]||[];
+  const rfes = DATA.rfeTracking[state.matterId]||[];
+  const canFile = ['Lawyer','CourtAdmin'].includes(state.role);
+  const st = s => s.includes('Approved') ? 'success' : s.includes('Pending') ? 'warning' : 'default';
+  return `<h2>Immigration Filings</h2>
+  <p class="subtitle">USCIS form tracking, priority-date monitoring, and RFE (Request for Evidence) deadline tracking — benchmarked from Cerenade's eimmigration. Priority-date movement is tracked here against the same monthly U.S. Department of State Visa Bulletin that eimmigration itself monitors — not a live feed in this prototype.</p>
+  ${canFile ? `<div class="formbox"><h3>File a new USCIS form as ${currentPartyName()}</h3>
+    <label>Form</label><input type="text" id="immForm" placeholder="e.g. I-751 — Petition to Remove Conditions">
+    <label>Receipt Number</label><input type="text" id="immReceipt" placeholder="e.g. MSC2690099999">
+    <label>Category</label><input type="text" id="immCategory" placeholder="e.g. Adjustment of Status">
+    <div class="err-text" id="immErr"></div>
+    <button class="btn-sm" onclick="fileImmigrationForm()">File form</button>
+  </div>` : ''}
+  <table><tr><th>Form</th><th>Receipt #</th><th>Filed</th><th>Category</th><th>Priority Date</th><th>Status</th></tr>
+  ${filings.map(f=>`<tr><td>${f.form}</td><td>${f.receiptNumber}</td><td>${f.filedDate}</td><td>${f.category}</td><td>${f.priorityDate}</td><td>${chip(f.status,st(f.status))}</td></tr>`).join('') || `<tr><td colspan="6" class="muted">No USCIS filings on record.</td></tr>`}
+  </table>
+  <h3 style="font-size:14px;color:var(--navy);margin-top:20px;">RFE Tracking</h3>
+  <table><tr><th>Related Form</th><th>Issued</th><th>Response Deadline</th><th>Subject</th><th>Status</th>${canFile?'<th>Action</th>':''}</tr>
+  ${rfes.map((r,i)=>`<tr><td>${r.relatedForm}</td><td>${r.issued}</td><td>${r.deadline}</td><td>${r.subject}</td><td>${chip(r.status,r.status==='Open'?'warning':'success')}</td>${canFile?`<td>${r.status==='Open'?`<button class="btn-sm outline" onclick="markRfeResponded(${i})">Mark responded</button>`:'<span class="muted">—</span>'}</td>`:''}</tr>`).join('') || `<tr><td colspan="${canFile?5:4}" class="muted">No open RFEs.</td></tr>`}
+  </table>`;
+}
+function fileImmigrationForm(){
+  const form = document.getElementById('immForm').value.trim();
+  const receiptNumber = document.getElementById('immReceipt').value.trim();
+  const category = document.getElementById('immCategory').value.trim();
+  const errEl = document.getElementById('immErr');
+  if(!form || !receiptNumber){ errEl.textContent = "Enter the form name and receipt number before filing."; return; }
+  errEl.textContent = "";
+  (DATA.immigrationFilings[state.matterId]=DATA.immigrationFilings[state.matterId]||[]).unshift({form, receiptNumber, filedDate:'just now', category: category||'—', priorityDate:'—', status:'Pending — Filed'});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Immigration Filings", actor:currentPartyName(), action:`Filed USCIS form: ${form} (${receiptNumber})`});
+  render();
+}
+function markRfeResponded(i){
+  const rows = DATA.rfeTracking[state.matterId]||[];
+  const r = rows[i];
+  if(!r) return;
+  r.status = 'Responded';
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Immigration Filings", actor:currentPartyName(), action:`Marked RFE responded: ${r.relatedForm}`});
+  render();
+}
+
+let signingOfferIdx = null;
+function pageNegotiation(){
+  const rows = DATA.negotiation[state.matterId]||[];
+  const canOffer = ['Plaintiff','Defendant','Lawyer','CourtAdmin'].includes(state.role);
+  const st = s => s==='Resolved' ? 'success' : s==='Rejected' ? 'error' : 'warning';
+  return `<h2>Negotiation & Settlement</h2>
+  <p class="subtitle">Structured offer/counter-offer negotiation, benchmarked primarily from Tyler/Modria — the one benchmark app confirmed actually deployed in U.S. courts (Florida circuit courts, for small-claims and debt-collection ODR) — informed by Presolv360/ODR@ADGM's offer-exchange UX. Acceptance uses an ESIGN-Act-consistent e-signature (typed legal name + explicit consent), the same pattern DocuSign/HelloSign use — never a single click silently "binding" anyone.</p>
+  ${canOffer ? `<div class="formbox"><h3>Submit an offer as ${currentPartyName()}</h3>
+    <label>Amount ($)</label><input type="number" id="negAmt" placeholder="0.00">
+    <label>Terms</label><textarea id="negTerms" placeholder="Describe the settlement terms..."></textarea>
+    <div class="err-text" id="negErr"></div>
+    <button class="btn-sm" onclick="submitOffer()">Submit offer</button>
+  </div>` : ''}
+  <table><tr><th>By</th><th>Amount</th><th>Terms</th><th>Date</th><th>Status</th>${canOffer?'<th>Action</th>':''}</tr>
+  ${rows.map((o,i)=>{
+    const theirsToDecide = o.status==='Pending' && o.by!==currentPartyName();
+    let actionCell = '<span class="muted">—</span>';
+    if(canOffer && theirsToDecide){
+      if(signingOfferIdx===i){
+        actionCell = `<div class="formbox" style="margin:0;padding:8px 10px;">
+          <label>Type your full legal name to sign</label><input type="text" id="signName${i}" placeholder="Full legal name">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text);"><input type="checkbox" id="signAgree${i}" style="width:auto;margin:0;"> I agree to these settlement terms</label>
+          <div class="err-text" id="signErr${i}"></div>
+          <div class="inline-actions"><button class="btn-sm" onclick="signSettlement(${i})">Accept & E-Sign</button><button class="btn-sm outline" onclick="cancelSigning()">Cancel</button></div>
+        </div>`;
+      } else {
+        actionCell = `<div class="inline-actions"><button class="btn-sm" onclick="startSigning(${i})">Accept</button><button class="btn-sm outline" onclick="openActionModal('negotiation',${i},'reject')">Reject</button></div>${actionModalHtml('negotiation',i)}`;
+      }
+    }
+    return `<tr><td>${o.by}</td><td>$${o.amount.toFixed(2)}</td><td>${o.terms}</td><td>${o.date}</td><td>${chip(o.status,st(o.status))}</td>${canOffer?`<td>${actionCell}</td>`:''}</tr>`;
+  }).join('') || `<tr><td colspan="${canOffer?6:5}" class="muted">No offers submitted yet.</td></tr>`}
+  </table>`;
+}
+function submitOffer(){
+  const amt = parseFloat(document.getElementById('negAmt').value);
+  const terms = document.getElementById('negTerms').value.trim();
+  const errEl = document.getElementById('negErr');
+  if(isNaN(amt) || amt<=0 || !terms){ errEl.textContent = "Enter a valid amount and terms before submitting."; return; }
+  errEl.textContent = "";
+  (DATA.negotiation[state.matterId]=DATA.negotiation[state.matterId]||[]).unshift({by:currentPartyName(), amount:amt, terms, date:'just now', status:'Pending'});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Negotiation", actor:currentPartyName(), action:`Submitted an offer: $${amt.toFixed(2)}`});
+  render();
+}
+function decideOffer(i, status, reason){
+  const rows = DATA.negotiation[state.matterId]||[];
+  const o = rows[i];
+  if(!o) return;
+  o.status = status;
+  o.decisionReason = reason || null;
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Negotiation", actor:currentPartyName(), action:`${status} offer from ${o.by}: $${o.amount.toFixed(2)}${reason?` — reason: ${reason}`:''}`});
+  render();
+}
+function startSigning(i){ signingOfferIdx = i; render(); }
+function cancelSigning(){ signingOfferIdx = null; render(); }
+function signSettlement(i){
+  const rows = DATA.negotiation[state.matterId]||[];
+  const o = rows[i];
+  if(!o) return;
+  const nameEl = document.getElementById('signName'+i);
+  const agreeEl = document.getElementById('signAgree'+i);
+  const errEl = document.getElementById('signErr'+i);
+  const name = nameEl ? nameEl.value.trim() : '';
+  const agreed = agreeEl ? agreeEl.checked : false;
+  if(!name || !agreed){ if(errEl) errEl.textContent = "Type your full legal name and check the agreement box to sign."; return; }
+  o.status = 'Resolved';
+  (DATA.agreements[state.matterId]=DATA.agreements[state.matterId]||[]).unshift({title:`Settlement Agreement — $${o.amount.toFixed(2)}`, type:'Settlement', status:'Active', date:'today', summary: o.terms});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Negotiation", actor:currentPartyName(), action:`E-signed and accepted settlement offer from ${o.by}: $${o.amount.toFixed(2)} (signed as "${name}")`});
+  signingOfferIdx = null;
+  render();
+}
+
+function pageAgreements(){
+  const rows = DATA.agreements[state.matterId]||[];
+  if(state.detail.page==='agreements' && rows[state.detail.idx]){
+    const a = rows[state.detail.idx];
+    const related = relatedAudit(state.matterId, a.title);
+    return `<button class="backlink" onclick="closeDetail()">← Back to Agreements</button>
+    <h2>${a.title}</h2>
+    <p class="subtitle">Agreement detail — visible to you as <b>${state.role}</b> on this Matter.</p>
+    <div class="detailbox">
+      <dl>
+        <dt>Type</dt><dd>${chip(a.type)}</dd>
+        <dt>Status</dt><dd>${chip(a.status,a.status==='Active'?'success':'warning')}</dd>
+        <dt>Effective / Drafted</dt><dd>${a.date}</dd>
+        <dt>Summary</dt><dd>${a.summary}</dd>
+      </dl>
+      <h3 style="font-size:13.5px;margin:0 0 8px;color:var(--navy);">Related activity on this agreement</h3>
+      ${related.length? related.map(r=>`<div class="item"><b>${r.module}</b> — ${r.action}<div class="muted">${r.actor} · ${r.ts}</div></div>`).join('') : '<div class="muted">No activity logged yet referencing this agreement.</div>'}
+    </div>`;
+  }
+  return `<h2>Agreements</h2>
+  <p class="subtitle">Legal guardianship, custody, visitation, child support, joint agreements — per the client's reference feature list. Click a row for details.</p>
+  <table><tr><th>Title</th><th>Type</th><th>Status</th><th>Effective</th><th>Summary</th></tr>
+  ${rows.map((a,i)=>`<tr class="clickable" onclick="viewDetail('agreements',${i})"><td>${a.title}</td><td>${chip(a.type)}</td><td>${chip(a.status,a.status==='Active'?'success':'warning')}</td><td>${a.date}</td><td>${a.summary}</td></tr>`).join('') || `<tr><td colspan="5" class="muted">No agreements on this Matter.</td></tr>`}
+  </table>`;
+}
+
+function pageActivities(){
+  const rows = DATA.activities[state.matterId]||[];
+  const canCreate = ['Plaintiff','Defendant','CourtAdmin'].includes(state.role);
+  return `<h2>Activities</h2>
+  <p class="subtitle">Children's activities and events — personal (private) or shared between parties.</p>
+  ${canCreate ? `<div class="formbox"><h3>Add an activity as ${currentPartyName()}</h3>
+    <label>Title</label><input type="text" id="actTitle" placeholder="e.g. Piano lesson">
+    <label>When</label><input type="datetime-local" id="actWhen">
+    <label>Visibility</label>
+    <select id="actVisibility"><option value="shared">Shared — Both parents</option><option value="personal">Private — only me</option></select>
+    <div class="err-text" id="actErr"></div>
+    <button class="btn-sm" onclick="addActivity()">Add activity</button>
+  </div>` : ''}
+  <table><tr><th>Title</th><th>When</th><th>Visibility</th></tr>
+  ${rows.map(a=>`<tr><td>${a.title}</td><td>${a.when}</td><td>${a.personal? chip('Private — only me') : chip('Shared — '+a.shared,'primary')}</td></tr>`).join('') || `<tr><td colspan="3" class="muted">No activities logged.</td></tr>`}
+  </table>`;
+}
+function addActivity(){
+  const title = document.getElementById('actTitle').value.trim();
+  const when = document.getElementById('actWhen').value;
+  const personal = document.getElementById('actVisibility').value === 'personal';
+  const errEl = document.getElementById('actErr');
+  if(!title || !when){ errEl.textContent = "Add a title and when before saving."; return; }
+  errEl.textContent = "";
+  (DATA.activities[state.matterId]=DATA.activities[state.matterId]||[]).unshift({title, when:fmtDT(when), shared:'Both parents', personal});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Activities", actor:currentPartyName(), action:`Added activity: ${title}${personal?' (private)':''}`});
+  render();
+}
+
+const CAL_CATEGORIES = {
+  "Handover": "🔄 Handover",
+  "Activity": "⚽ Activity",
+  "Holiday": "🎄 Holiday",
+  "Visitation-Virtual": "💻 Virtual Visitation",
+  "Visitation-Physical": "🧑‍🤝‍🧑 In-Person Visitation",
+  "Arraignment": "⚖️ Arraignment",
+  "Pretrial-Hearing": "📋 Pretrial Hearing",
+  "Trial": "🏛️ Trial",
+  "Sentencing": "🔨 Sentencing",
+  "Other": "📌 Other"
+};
+let calFilters = new Set();
+function pageCalendar(){
+  const rows = DATA.calendar[state.matterId]||[];
+  const cats = [...new Set(rows.map(r=>r.cat))];
+  const filtered = calFilters.size ? rows.filter(r=>calFilters.has(r.cat)) : rows;
+  const canCreate = ['Plaintiff','Defendant','CourtAdmin'].includes(state.role);
+  return `<h2>Calendar</h2>
+  <p class="subtitle">Maps agreements, activities, handovers, holidays, and physical/virtual visitations — with filtering and a legend.</p>
+  ${canCreate ? `<div class="formbox"><h3>Create an event as ${currentPartyName()}</h3>
+    <label>Title</label><input type="text" id="calTitle" placeholder="e.g. ${ex('calendarTitle')}">
+    <label>Category</label>
+    <select id="calCat">${Object.keys(CAL_CATEGORIES).map(c=>`<option value="${c}">${CAL_CATEGORIES[c]}</option>`).join('')}</select>
+    <label>Start</label><input type="datetime-local" id="calStart">
+    <label>End</label><input type="datetime-local" id="calEnd">
+    <div class="err-text" id="calErr"></div>
+    <button class="btn-sm" onclick="createCalendarEvent()">Create event</button>
+  </div>` : ''}
+  <div>${cats.map(c=>`<span class="filterchip ${calFilters.has(c)?'on':''}" onclick="toggleCalFilter('${c}')">${c}</span>`).join('')}
+  ${calFilters.size? `<span class="filterchip" onclick="clearCalFilter()">Clear filters</span>`:''}</div>
+  <table style="margin-top:10px;"><tr><th>Legend</th><th>Title</th><th>Category</th><th>Start</th><th>End</th></tr>
+  ${filtered.map(e=>`<tr><td>${e.legend}</td><td>${e.title}</td><td>${e.cat}</td><td>${e.start}</td><td>${e.end}</td></tr>`).join('') || `<tr><td colspan="5" class="muted">No events.</td></tr>`}
+  </table>
+  ${pageScheduleRequests(rows, canCreate)}`;
+}
+function pageScheduleRequests(events, canCreate){
+  const reqRows = DATA.scheduleRequests[state.matterId]||[];
+  return `<h3 style="font-size:14px;color:var(--navy);margin-top:22px;">Schedule Change Requests</h3>
+  <p class="subtitle" style="margin-top:2px;">Request an isolated change to one event's date/time — separate from creating a new event. The other parent can approve, refuse, or the request stays on record either way. Pattern benchmarked from OurFamilyWizard's Calendar schedule-change-request tool.</p>
+  ${canCreate && events.length ? `<div class="formbox"><h3>Request a schedule change as ${currentPartyName()}</h3>
+    <label>Event</label><select id="chgEvent">${events.map(e=>`<option>${e.title}</option>`).join('')}</select>
+    <label>Proposed New Start</label><input type="datetime-local" id="chgStart">
+    <label>Proposed New End</label><input type="datetime-local" id="chgEnd">
+    <label>Reason</label><textarea id="chgReason" placeholder="Briefly explain the reason for the change..."></textarea>
+    <div class="err-text" id="chgErr"></div>
+    <button class="btn-sm" onclick="requestScheduleChange()">Submit change request</button>
+  </div>` : (canCreate ? '<div class="muted" style="margin-bottom:14px;">No events on this Matter yet to request a change on.</div>' : '')}
+  <table><tr><th>Event</th><th>Requested By</th><th>Proposed</th><th>Reason</th><th>Status</th>${canCreate?'<th>Action</th>':''}</tr>
+  ${reqRows.map((r,i)=>`<tr><td>${r.eventTitle}</td><td>${r.requestedBy}</td><td>${r.newStart} – ${r.newEnd}</td><td>${r.reason}</td><td>${chip(r.status, r.status==='Approved'?'success':r.status==='Declined'?'error':'warning')}${r.decisionReason?`<div class="muted" style="margin-top:2px;">Reason: ${r.decisionReason}</div>`:''}</td>${canCreate?`<td>${r.status==='Pending' && r.requestedBy!==currentPartyName() ? `<div class="inline-actions"><button class="btn-sm" onclick="openActionModal('schedule',${i},'approve')">Approve</button><button class="btn-sm outline" onclick="openActionModal('schedule',${i},'reject')">Refuse</button></div>${actionModalHtml('schedule',i)}` : '<span class="muted">—</span>'}</td>`:''}</tr>`).join('') || `<tr><td colspan="${canCreate?6:5}" class="muted">No schedule change requests.</td></tr>`}
+  </table>`;
+}
+function toggleCalFilter(c){ calFilters.has(c)?calFilters.delete(c):calFilters.add(c); render(); }
+function clearCalFilter(){ calFilters.clear(); render(); }
+function createCalendarEvent(){
+  const title = document.getElementById('calTitle').value.trim();
+  const cat = document.getElementById('calCat').value;
+  const start = document.getElementById('calStart').value;
+  const end = document.getElementById('calEnd').value;
+  const errEl = document.getElementById('calErr');
+  if(!title || !start){ errEl.textContent = "Add a title and a start time before creating the event."; return; }
+  errEl.textContent = "";
+  (DATA.calendar[state.matterId]=DATA.calendar[state.matterId]||[]).unshift({title, cat, legend:CAL_CATEGORIES[cat], start:fmtDT(start), end:fmtDT(end||start)});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Calendar", actor:currentPartyName(), action:`Created calendar event: ${title} (${cat})`});
+  render();
+}
+function requestScheduleChange(){
+  const eventTitle = document.getElementById('chgEvent').value;
+  const newStart = document.getElementById('chgStart').value;
+  const newEnd = document.getElementById('chgEnd').value;
+  const reason = document.getElementById('chgReason').value.trim();
+  const errEl = document.getElementById('chgErr');
+  if(!newStart || !reason){ errEl.textContent = "Add a proposed start time and a reason before submitting."; return; }
+  errEl.textContent = "";
+  (DATA.scheduleRequests[state.matterId]=DATA.scheduleRequests[state.matterId]||[]).unshift({eventTitle, requestedBy:currentPartyName(), newStart:fmtDT(newStart), newEnd:fmtDT(newEnd||newStart), reason, status:'Pending', date:'just now'});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Calendar", actor:currentPartyName(), action:`Requested schedule change: ${eventTitle} → ${newStart}`});
+  render();
+}
+function decideScheduleChange(i, approve, reason){
+  const rows = DATA.scheduleRequests[state.matterId]||[];
+  const r = rows[i];
+  if(!r) return;
+  r.status = approve ? 'Approved' : 'Declined';
+  r.decisionReason = reason || null;
+  if(approve){
+    const events = DATA.calendar[state.matterId]||[];
+    const ev = events.find(e=>e.title===r.eventTitle);
+    if(ev){ ev.start = r.newStart; ev.end = r.newEnd; }
+  }
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Calendar", actor:currentPartyName(), action:`${approve?'Approved':'Refused'} schedule change: ${r.eventTitle}${reason?` — reason: ${reason}`:''}`});
+  render();
+}
+
+let activeThreadIdx = 0;
+function pageMessaging(){
+  const threads = DATA.messages[state.matterId]||[];
+  const t = threads[activeThreadIdx] || threads[0];
+  return `<h2>Messaging</h2>
+  <p class="subtitle">Text-only, categorized by subject — no calls/video yet. Benchmarked from TalkingParents "Unalterable Records" (sent/viewed timestamps, cannot edit or delete).</p>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div class="thread-list" style="width:260px;">
+    ${threads.map((th,i)=>`<button class="${i===activeThreadIdx?'active':''}" onclick="selectThread(${i})"><b>${th.subject}</b><div class="muted">${th.msgs.length} message(s)</div></button>`).join('') || '<div class="muted">No threads.</div>'}
+    </div>
+    <div style="flex:1;min-width:280px;">
+    ${t ? `<h3>${t.subject}</h3>` + t.msgs.map(m=>`<div class="msg"><b>${m.from}</b><div style="margin:4px 0;">${m.body}</div><div class="muted">Sent ${m.sent}${m.viewed? ' · Viewed '+m.viewed : ' · Not yet viewed'}</div></div>`).join('') + `<div class="alert alert-info">Unalterable record — messages cannot be edited or deleted (benchmark pattern).</div>
+    <button class="btn-sm outline" onclick="openCertifiedExport('messaging',${activeThreadIdx})">📜 Request Certified Transcript for Court (fee applies)</button>
+    ${certifiedExportHtml('messaging', activeThreadIdx)}
+    <div class="formbox"><h3>Reply as ${currentPartyName()}</h3><textarea id="replyBody" oninput="updateToneMeter('replyBody','replyTone')" placeholder="Type your message..."></textarea><div id="replyTone"></div><div class="err-text" id="replyErr"></div><button class="btn-sm" onclick="sendReply()">Send</button></div>` : '<div class="muted">Select a subject thread.</div>'}
+    </div>
+  </div>`;
+}
+function selectThread(i){ activeThreadIdx=i; render(); }
+function sendReply(){
+  const box = document.getElementById('replyBody');
+  const errEl = document.getElementById('replyErr');
+  const text = box.value.trim();
+  if(!text){ errEl.textContent = "Type a message before sending."; return; }
+  errEl.textContent = "";
+  const threads = DATA.messages[state.matterId]||[];
+  const t = threads[activeThreadIdx];
+  if(!t) return;
+  t.msgs.push({from:currentPartyName(), sent:"just now", viewed:null, body:text});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Messaging", actor:currentPartyName(), action:`Sent message: ${t.subject}`});
+  render();
+}
+
+function pageNotes(){
+  const rows = DATA.notes[state.matterId]||[];
+  return `<h2>Children's Notes Board</h2>
+  <p class="subtitle">Shared, dated notes about the child(ren) — separate from the formal messaging log.</p>
+  <div class="formbox"><h3>Add a note as ${currentPartyName()}</h3><textarea id="noteBody" placeholder="Write a note..."></textarea><div class="err-text" id="noteErr"></div><button class="btn-sm" onclick="postNote()">Post note</button></div>
+  ${rows.map(n=>`<div class="item"><b>${n.author}</b> · ${n.date}<div style="margin-top:4px;">${n.note}</div></div>`).join('') || '<div class="muted">No notes yet.</div>'}`;
+}
+function postNote(){
+  const box = document.getElementById('noteBody');
+  const errEl = document.getElementById('noteErr');
+  const text = box.value.trim();
+  if(!text){ errEl.textContent = "Write a note before posting."; return; }
+  errEl.textContent = "";
+  (DATA.notes[state.matterId]=DATA.notes[state.matterId]||[]).unshift({author:currentPartyName(), date:"just now", note:text});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Notes Board", actor:currentPartyName(), action:"Posted a note"});
+  render();
+}
+
+function pageJournal(){
+  // "Only me (private)" entries were being rendered to every role with Journal access — a real visibility leak
+  // (the other parent, or an Expert, could read a Moment its author explicitly marked private). Now shown only to
+  // the entry's own author. CourtAdmin does NOT get an exception here: "Only me" is personal journaling, not an
+  // official court record, so it stays private even from the admin role.
+  const allRows = DATA.journal[state.matterId]||[];
+  const rows = allRows.filter(j=> j.shareWith!=='Only me (private)' || j.author===currentPartyName());
+  const hiddenCount = allRows.length - rows.length;
+  const canCreate = ['Plaintiff','Defendant','CourtAdmin'].includes(state.role);
+  return `<h2>Journal</h2>
+  <p class="subtitle">Check-Ins verify arrival at a handover or important location; Moments record a memory — a note and optionally a photo — with a location tag. Both are shareable with the other parent, the child, or a legal professional. Pattern benchmarked from OurFamilyWizard's Journal (Check-Ins &amp; Moments).</p>
+  ${canCreate ? `<div class="formbox"><h3>Log a Check-In as ${currentPartyName()}</h3>
+    <label>Location</label>${locationPickerField('ciLocation', true)}
+    <div style="height:10px;"></div>
+    <label>Note (optional)</label><input type="text" id="ciNote" placeholder="e.g. Arrived on time">
+    <div class="err-text" id="ciErr"></div>
+    <button class="btn-sm" onclick="addCheckIn()">📍 Check in now</button>
+  </div>
+  <div class="formbox"><h3>Add a Moment as ${currentPartyName()}</h3>
+    <label>Location (optional)</label>${locationPickerField('momLocation', false)}
+    <div style="height:10px;"></div>
+    <label>Photo (optional)</label><input type="file" id="momFile" accept="image/*">
+    <label>Note</label><textarea id="momNote" oninput="updateToneMeter('momNote','momTone')" placeholder="Write about this moment..."></textarea>
+    <div id="momTone"></div>
+    <label>Share with</label>
+    <select id="momShare"><option value="Both parents">Both parents</option><option value="Only me">Only me (private)</option></select>
+    <div class="err-text" id="momErr"></div>
+    <button class="btn-sm" onclick="addMoment()">Post moment</button>
+  </div>` : ''}
+  ${rows.map(j=>`<div class="item">${j.type==='CheckIn'?'📍':'📷'} <b>${j.author}</b> · ${j.date}${j.location?` · ${j.location}`:''}
+    <div style="margin-top:4px;">${j.note||''}</div>
+    ${j.photoData?`<div style="margin-top:6px;"><button class="btn-sm outline" onclick="window.open('${j.photoData}','_blank')">📎 ${j.photoName||'View photo'}</button></div>`:''}
+    <div class="muted" style="margin-top:4px;">${chip(j.type, j.type==='CheckIn'?'primary':'default')} · Shared with: ${j.shareWith}</div>
+  </div>`).join('') || '<div class="muted">No Journal entries yet.</div>'}
+  ${hiddenCount>0 ? `<div class="muted" style="margin-top:10px;">🔒 ${hiddenCount} entr${hiddenCount===1?'y':'ies'} marked "Only me (private)" by their author — not shown to you.</div>` : ''}`;
+}
+function addCheckIn(){
+  const location = document.getElementById('ciLocation').value.trim();
+  const note = document.getElementById('ciNote').value.trim();
+  const errEl = document.getElementById('ciErr');
+  if(!location){ errEl.textContent = "Add a location before checking in."; return; }
+  errEl.textContent = "";
+  (DATA.journal[state.matterId]=DATA.journal[state.matterId]||[]).unshift({type:'CheckIn', author:currentPartyName(), date:'just now', location, note, shareWith:'Both parents'});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Journal", actor:currentPartyName(), action:`Checked in: ${location}`});
+  render();
+}
+function addMoment(){
+  const location = document.getElementById('momLocation').value.trim();
+  const note = document.getElementById('momNote').value.trim();
+  const share = document.getElementById('momShare').value;
+  const errEl = document.getElementById('momErr');
+  if(!note){ errEl.textContent = "Write a note before posting."; return; }
+  errEl.textContent = "";
+  const finish = (photoData, photoName) => {
+    (DATA.journal[state.matterId]=DATA.journal[state.matterId]||[]).unshift({type:'Moment', author:currentPartyName(), date:'just now', location, note, shareWith:share, photoData:photoData||null, photoName:photoName||null});
+    (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Journal", actor:currentPartyName(), action:`Posted a Moment${photoName?` (attached ${photoName})`:''}`});
+    render();
+  };
+  const fileInput = document.getElementById('momFile');
+  const f = fileInput && fileInput.files && fileInput.files[0];
+  if(f){
+    const reader = new FileReader();
+    reader.onload = function(){ finish(reader.result, f.name); };
+    reader.readAsDataURL(f);
+  } else {
+    finish(null, null);
+  }
+}
+
+function pageExpenses(){
+  const rows = DATA.expenses[state.matterId]||[];
+  const st = s=> s==='Reimbursed'?'success': s==='Reimbursement Requested'||s==='Pending'?'warning': s==='Declined'?'error':'default';
+  const attCell = e => e.fileData
+    ? `<button class="btn-sm outline" onclick="window.open('${e.fileData}','_blank')">📎 ${e.fileName||'View'}</button>`
+    : (e.receipt ? '📎 Attached' : '—');
+  const canDecideExpense = ['Plaintiff','Defendant','CourtAdmin'].includes(state.role);
+  return `<h2>Expenses</h2>
+  <p class="subtitle">Recording and tracking, with reimbursement requests and receipt upload — benchmarked from AppClose/TalkingParents expense + payment tracking. Click 📎 to open an attached receipt.</p>
+  <div class="formbox"><h3>Add an expense as ${currentPartyName()}</h3>
+    <label>Description</label><input type="text" id="expDesc" placeholder="e.g. ${ex('expenseDesc')}">
+    <label>Amount ($)</label><input type="number" id="expAmt" placeholder="0.00">
+    <label>Receipt (optional)</label><input type="file" id="expFile" accept="image/*,.pdf">
+    <div class="err-text" id="expErr"></div>
+    <button class="btn-sm" onclick="addExpense()">Add expense</button>
+  </div>
+  <table><tr><th>Description</th><th>Amount</th><th>Paid By</th><th>Receipt</th><th>Status</th><th>Date</th>${canDecideExpense?'<th>Action</th>':''}</tr>
+  ${rows.map((e,i)=>{
+    const canAct = canDecideExpense && (e.status==='Pending'||e.status==='Reimbursement Requested') && (state.role==='CourtAdmin' || oppositeRole(e.paidBy)===state.role);
+    const actionCell = canAct ? `<div class="inline-actions"><button class="btn-sm" onclick="openActionModal('expense',${i},'approve')">Approve</button><button class="btn-sm outline" onclick="openActionModal('expense',${i},'reject')">Decline</button></div>${actionModalHtml('expense',i)}` : '<span class="muted">—</span>';
+    return `<tr><td>${e.desc}</td><td>$${e.amount.toFixed(2)}</td><td>${e.paidBy}</td><td>${attCell(e)}</td><td>${chip(e.status,st(e.status))}${e.decisionReason?`<div class="muted" style="margin-top:2px;">Reason: ${e.decisionReason}</div>`:''}</td><td>${e.date}</td>${canDecideExpense?`<td>${actionCell}</td>`:''}</tr>`;
+  }).join('') || `<tr><td colspan="${canDecideExpense?7:6}" class="muted">No expenses logged.</td></tr>`}
+  </table>`;
+}
+function decideExpenseReimbursement(i, approve, reason){
+  const rows = DATA.expenses[state.matterId]||[];
+  const e = rows[i];
+  if(!e) return;
+  e.status = approve ? 'Reimbursed' : 'Declined';
+  e.decisionReason = reason || null;
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Expenses", actor:currentPartyName(), action:`${approve?'Approved':'Declined'} reimbursement: ${e.desc}${reason?` — reason: ${reason}`:''}`});
+  render();
+}
+function addExpense(){
+  const desc = document.getElementById('expDesc').value.trim();
+  const amt = parseFloat(document.getElementById('expAmt').value);
+  const errEl = document.getElementById('expErr');
+  if(!desc || isNaN(amt) || amt<=0){ errEl.textContent = "Enter a description and a valid amount first."; return; }
+  errEl.textContent = "";
+  const finish = (fileData, fileName) => {
+    (DATA.expenses[state.matterId]=DATA.expenses[state.matterId]||[]).unshift({desc, amount:amt, paidBy:currentPartyName(), status:'Pending', fileData:fileData||null, fileName:fileName||null, date:'just now'});
+    (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Expenses", actor:currentPartyName(), action:`Submitted expense: ${desc}${fileName?` (attached ${fileName})`:''}`});
+    render();
+  };
+  const fileInput = document.getElementById('expFile');
+  const f = fileInput && fileInput.files && fileInput.files[0];
+  if(f){
+    const reader = new FileReader();
+    reader.onload = function(){ finish(reader.result, f.name); };
+    reader.readAsDataURL(f);
+  } else {
+    finish(null, null);
+  }
+}
+
+// A charge is visible to a viewer if: they're CourtAdmin (oversight), it's their OWN charge (party string
+// contains their name — Court Fee entries store "Name (Role)", plain requests store just the name), or it's a
+// Court Fee (part of the official court record — both sides on a matter are entitled to see what was filed and
+// charged against it, same as real court dockets). A Lawyer sees Court Fees they may have triggered by filing, but
+// never the other party's private Subscription/Requested-Payment charges or card details — added after a visibility
+// audit found the original unfiltered lists exposed every party's payment methods and personal charges to everyone
+// who could reach this page.
+function canSeeCharge(p){
+  if(state.role==='CourtAdmin') return true;
+  if(p.kind==='Court Fee') return true;
+  return p.party && p.party.includes(currentPartyName());
+}
+function pagePayments(){
+  const allMethods = DATA.paymentMethods[state.matterId]||[];
+  const methods = state.role==='CourtAdmin' ? allMethods : allMethods.filter(m=>m.party===currentPartyName());
+  const rows = DATA.payments[state.matterId]||[];
+  const reqCanAct = ['Plaintiff','Defendant','CourtAdmin'].includes(state.role);
+  const canManageOwnMethod = ['Plaintiff','Defendant'].includes(state.role);
+  const reqs = DATA.paymentRequests[state.matterId]||[];
+  const myMethod = allMethods.find(m=>m.party===currentPartyName());
+  const st = s=> s==='Paid'?'success': s==='Failed'?'error':'warning';
+
+  if(state.detail.page==='payments' && rows[state.detail.idx] && canSeeCharge(rows[state.detail.idx])){
+    const p = rows[state.detail.idx];
+    const related = relatedAudit(state.matterId, p.relatedTitle || p.desc);
+    return `<button class="backlink" onclick="closeDetail()">← Back to Payment Methods & Charges</button>
+    <h2>${p.kind}</h2>
+    <p class="subtitle">Charge detail — visible to you as <b>${state.role}</b> on this Matter.</p>
+    <div class="detailbox">
+      <dl>
+        <dt>Description</dt><dd>${p.desc}</dd>
+        ${p.breakdown?`<dt>Breakdown</dt><dd>${p.breakdown}</dd>`:''}
+        <dt>Amount</dt><dd>${p.currency}${p.amount.toFixed(2)}</dd>
+        <dt>Charged To</dt><dd>${p.party}</dd>
+        ${p.filedBy?`<dt>Filed By</dt><dd>${p.filedBy}</dd>`:''}
+        <dt>Charged By</dt><dd>${p.chargedBy}</dd>
+        <dt>Payment Method</dt><dd>💳 ${p.method}</dd>
+        <dt>Status</dt><dd>${chip(p.status,st(p.status))}</dd>
+        <dt>Date</dt><dd>${p.date}</dd>
+      </dl>
+      ${p.feeLines && p.feeLines.length ? `<h3 style="font-size:13.5px;margin:0 0 10px;color:var(--navy);">Payment Receipt — Itemized</h3>
+      <table style="margin-bottom:16px;"><tr><th>Line Item</th><th>Amount</th></tr>
+      ${p.feeLines.map(f=>`<tr><td>${f.label}</td><td>${f.amount<0?'-':''}$${Math.abs(f.amount).toFixed(2)}</td></tr>`).join('')}
+      </table>` : ''}
+      ${p.steps && p.steps.length ? `<h3 style="font-size:13.5px;margin:0 0 10px;color:var(--navy);">Steps — from filing to the card being charged</h3>
+      <div style="margin-bottom:16px;">${p.steps.map((s,i)=>`<div class="item"><b>${i+1}. ${s.label}</b><div class="muted">${s.who} · ${s.ts}</div></div>`).join('')}</div>` : ''}
+      ${related.length? `<h3 style="font-size:13.5px;margin:0 0 8px;color:var(--navy);">Related activity in the audit log</h3>${related.map(r=>`<div class="item"><b>${r.module}</b> — ${r.action}<div class="muted">${r.actor} · ${r.ts}</div></div>`).join('')}` : ''}
+    </div>`;
+  }
+
+  return `<h2>Payment Methods & Charges</h2>
+  <div class="card" style="margin-bottom:16px;">
+    <h3>Fee Types — What You're Actually Being Charged</h3>
+    <p class="muted" style="margin:-2px 0 8px;">Added per the client's request: these are genuinely different charges, kept visibly separate rather than lumped into one number.</p>
+    <table><tr><th>Fee Type</th><th>Who It Goes To</th><th>When It Applies</th></tr>
+      <tr><td>Court Filing Fee</td><td>The court (government)</td><td>Only when a Lawyer files a Motion/Filing/Brief under Reports/Statements/Filings</td></tr>
+      <tr><td>Platform Service Fee</td><td>This app</td><td>Charged alongside a court filing, for submitting that request through the app</td></tr>
+      <tr><td>Payment Processing / Transfer Fee</td><td>Payment processor (illustrative)</td><td>When money is actually moved through the app — e.g. paying a Payment Request</td></tr>
+      <tr><td>Platform Commission</td><td>This app</td><td>A small % taken from the payee's side of a transferred payment (illustrative)</td></tr>
+      <tr><td>Downloading your own records (Export)</td><td>—</td><td>Free — exporting your own messages/documents/records never carries a fee</td></tr>
+      <tr><td>Certified Export Fee</td><td>This app</td><td>Only when requesting a certified, court-admissible export — e.g. downloading the other party's conversation to submit as evidence (Messaging, Documents)</td></tr>
+    </table>
+    <p class="muted" style="margin:8px 0 0;">All amounts on this page are illustrative, not confirmed pricing. The fee for an action always shows at the moment you request that action — not just here — and every charge shows its own itemized receipt.</p>
+  </div>
+  <p class="subtitle">Card-on-file (masked only) and the charges made against it — subscription billing and court-related fees, in USD.
+  Pattern benchmarked from real US court e-filing systems (Tyler/Odyssey "TOGA" lets a filer save a card account-wide and auto-charges it
+  for court filing fees the moment the court accepts the filing) and from OurFamilyWizard's own stored-payment-method subscription billing.
+  This prototype never collects or processes a real card — no full card number is ever entered, only a masked reference — and no real
+  charge is made, consistent with the platform-wide rule against handling real payment credentials or moving real money. Court-fee amounts
+  shown are illustrative — benchmarked from published US family-court motion fees (roughly $45–$60, e.g. Franklin County PA's $56.25 family
+  motion fee) plus a separate service fee, the same two-part structure Tyler/Odyssey's own e-filing charges use — not a client-confirmed price.
+  Click a Court Fee row to see the exact step-by-step flow from filing to the card being charged.</p>
+  ${state.role==='Lawyer' ? `<div class="alert alert-info">Viewing as Lawyer: you can see court fees and their payment status (including filings you submitted), but never the other party's card details or personal charges — and you cannot request, pay, or manage a payment method on a client's behalf.</div>` : ''}
+
+  <div class="card" style="margin-bottom:18px;">
+    <h3>Payment Methods on File${state.role==='CourtAdmin'?'':' (yours only)'}</h3>
+    ${methods.length? methods.map(m=>`<div class="item">💳 <b>${m.brand} •••• ${m.last4}</b> (${m.nickname}) — ${m.party}<div class="muted">Exp ${m.exp}</div></div>`).join('') : '<div class="muted">No payment method on file yet.</div>'}
+  </div>
+
+  ${canManageOwnMethod ? `<div class="formbox"><h3>Add a payment method as ${currentPartyName()}</h3>
+    <p class="muted" style="margin:-4px 0 10px;">In production this would hand off to a PCI-compliant processor (e.g. Stripe) — the prototype only records a masked reference, never a full card number.</p>
+    <label>Card Brand</label>
+    <select id="pmBrand"><option>Visa</option><option>Mastercard</option><option>Amex</option></select>
+    <label>Last 4 Digits</label><input type="text" maxlength="4" id="pmLast4" placeholder="e.g. 4242">
+    <label>Expiry (MM/YY)</label><input type="text" id="pmExp" placeholder="e.g. 09/28">
+    <label>Nickname</label><input type="text" id="pmNick" placeholder="e.g. Personal Visa">
+    <div class="err-text" id="pmErr"></div>
+    <button class="btn-sm" onclick="addPaymentMethod()">Save payment method</button>
+  </div>` : ''}
+
+  <h3 style="font-size:14px;color:var(--navy);">Payment Requests</h3>
+  <p class="subtitle" style="margin-top:-4px;">Ask the other party to pay an amount owed under this Matter — a settlement installment, an overdue support payment, a lien balance — and they can pay it right here, using a card already on file. Benchmarked directly from a case example given by the client's own U.S. legal consultant: one party requests payment the other party owes and hasn't paid; the other party, in the app, can pay it.</p>
+  ${reqCanAct ? `<div class="formbox"><h3>Request a payment as ${currentPartyName()}</h3>
+    <label>Amount ($)</label><input type="number" id="prAmt" placeholder="0.00">
+    <label>Reason</label><textarea id="prReason" placeholder="${ex('paymentRequestReason')}"></textarea>
+    <label>Due Date</label><input type="date" id="prDue">
+    <div class="err-text" id="prErr"></div>
+    <button class="btn-sm" onclick="submitPaymentRequest()">Request payment</button>
+  </div>` : ''}
+  <table><tr><th>Requested By</th><th>Amount</th><th>Reason</th><th>Due</th><th>Status</th>${reqCanAct?'<th>Action</th>':''}</tr>
+  ${reqs.map((r,i)=>{
+    const theirsToPay = r.status==='Pending' && r.by!==currentPartyName();
+    let action = '<span class="muted">—</span>';
+    if(reqCanAct && theirsToPay){
+      const payBtn = myMethod ? `<button class="btn-sm" onclick="payPaymentRequest(${i})">Pay Now</button>` : `<span class="muted">Add a payment method above first</span>`;
+      action = `<div class="inline-actions">${payBtn}<button class="btn-sm outline" onclick="openActionModal('paymentRequest',${i},'reject')">Decline</button></div>${actionModalHtml('paymentRequest',i)}`;
+    }
+    return `<tr><td>${r.by}</td><td>$${r.amount.toFixed(2)}</td><td>${r.reason}</td><td>${dueLabel(r.dueDate)}</td><td>${chip(r.status,r.status==='Paid'?'success':r.status==='Declined'?'error':'warning')}${r.declineReason?`<div class="muted" style="margin-top:2px;">Reason: ${r.declineReason}</div>`:''}</td>${reqCanAct?`<td>${action}</td>`:''}</tr>`;
+  }).join('') || `<tr><td colspan="${reqCanAct?6:5}" class="muted">No payment requests.</td></tr>`}
+  </table>
+
+  ${installmentPlansHtml()}
+
+  <h3 style="font-size:14px;color:var(--navy);margin-top:20px;">Charges${state.role==='CourtAdmin'?'':' (yours, plus official Court Fees on this Matter)'}</h3>
+  <table><tr><th>Kind</th><th>Description</th><th>Amount</th><th>Charged To</th><th>Method</th><th>Status</th><th>Date</th></tr>
+  ${rows.map((p,i)=>({p,i})).filter(r=>canSeeCharge(r.p)).map(({p,i})=>`<tr class="clickable" onclick="viewDetail('payments',${i})"><td>${chip(p.kind,p.kind==='Court Fee'?'primary':'default')}</td><td>${p.desc}</td><td>${p.currency}${p.amount.toFixed(2)}</td><td>${p.party}</td><td>${p.method}</td><td>${chip(p.status,st(p.status))}</td><td>${p.date}</td></tr>`).join('') || `<tr><td colspan="7" class="muted">No charges recorded.</td></tr>`}
+  </table>`;
+}
+function submitPaymentRequest(){
+  const amt = parseFloat(document.getElementById('prAmt').value);
+  const reason = document.getElementById('prReason').value.trim();
+  const due = document.getElementById('prDue').value;
+  const errEl = document.getElementById('prErr');
+  if(isNaN(amt) || amt<=0 || !reason){ errEl.textContent = "Enter a valid amount and reason before requesting."; return; }
+  errEl.textContent = "";
+  (DATA.paymentRequests[state.matterId]=DATA.paymentRequests[state.matterId]||[]).unshift({by:currentPartyName(), amount:amt, reason, dueDate: due||'—', date:'just now', status:'Pending'});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Payments", actor:currentPartyName(), action:`Requested payment: $${amt.toFixed(2)} — ${reason}`});
+  (DATA.notifications[state.matterId]=DATA.notifications[state.matterId]||[]).unshift({ts:"just now", title:`Payment requested: $${amt.toFixed(2)} — ${reason}`, read:false, module:"Payments", forRole:null});
+  render();
+}
+function declinePaymentRequest(i, reason){
+  const rows = DATA.paymentRequests[state.matterId]||[];
+  const r = rows[i];
+  if(!r) return;
+  r.status = 'Declined';
+  r.declineReason = reason || null;
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Payments", actor:currentPartyName(), action:`Declined payment request: $${r.amount.toFixed(2)} — ${r.reason}${reason?` (reason: ${reason})`:''}`});
+  render();
+}
+function payPaymentRequest(i){
+  const rows = DATA.paymentRequests[state.matterId]||[];
+  const r = rows[i];
+  if(!r) return;
+  const methods = DATA.paymentMethods[state.matterId]||[];
+  const mine = methods.find(m=>m.party===currentPartyName());
+  if(!mine) return;
+  const methodLabel = `${mine.brand} •••• ${mine.last4}`;
+  r.status = 'Paid';
+  // Processing/transfer fee and platform commission kept as separate illustrative line items per the client's
+  // request — never blended into the requested amount itself. Processing fee is added on top of what the payer
+  // sends; commission is shown as deducted from the payee's side (never double-charged to the payer).
+  const processingFee = +(r.amount * 0.029 + 0.30).toFixed(2);
+  const platformCommission = +(r.amount * 0.01).toFixed(2);
+  (DATA.payments[state.matterId]=DATA.payments[state.matterId]||[]).unshift({kind:'Requested Payment', desc:r.reason, amount:r.amount, currency:'$', party:currentPartyName(), chargedBy:`Paid in response to a request from ${r.by}`, method:methodLabel, status:'Paid', date:'just now',
+    breakdown:`Amount to payee: $${r.amount.toFixed(2)} + processing/transfer fee $${processingFee.toFixed(2)} (illustrative) — platform commission $${platformCommission.toFixed(2)} deducted from payee's side (illustrative)`,
+    feeLines:[
+      {label:'Amount Requested (to payee)', amount:r.amount},
+      {label:'Payment Processing / Transfer Fee (illustrative, charged to payer)', amount:processingFee},
+      {label:"Platform Commission — deducted from payee's side (illustrative)", amount:-platformCommission}
+    ]});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Payments", actor:currentPartyName(), action:`Paid requested payment: $${r.amount.toFixed(2)} — ${r.reason} (requested by ${r.by})`});
+  render();
+}
+function addPaymentMethod(){
+  const brand = document.getElementById('pmBrand').value;
+  const last4 = document.getElementById('pmLast4').value.trim();
+  const exp = document.getElementById('pmExp').value.trim();
+  const nickname = document.getElementById('pmNick').value.trim() || `${brand} card`;
+  const errEl = document.getElementById('pmErr');
+  if(!/^\d{4}$/.test(last4) || !exp){ errEl.textContent = "Enter the last 4 digits and an expiry (MM/YY) — never the full card number."; return; }
+  errEl.textContent = "";
+  (DATA.paymentMethods[state.matterId]=DATA.paymentMethods[state.matterId]||[]).push({party:currentPartyName(), brand, last4, exp, nickname});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Payments", actor:currentPartyName(), action:`Added payment method on file: ${brand} •••• ${last4}`});
+  render();
+}
+
+function pageConsents(){
+  const rows = DATA.consents[state.matterId]||[];
+  const st = s=> s==='Approved'?'success': s==='Declined'?'error':'warning';
+  const canRequest = ['Plaintiff','Defendant','CourtAdmin'].includes(state.role);
+  const canDecide = ['Plaintiff','Defendant','CourtAdmin'].includes(state.role);
+
+  if(state.detail.page==='consents' && rows[state.detail.idx]){
+    const c = rows[state.detail.idx];
+    const i = state.detail.idx;
+    const related = relatedAudit(state.matterId, c.subject);
+    return `<button class="backlink" onclick="closeDetail()">← Back to Consents</button>
+    <h2>${c.subject}</h2>
+    <p class="subtitle">Consent request detail — visible to you as <b>${state.role}</b> on this Matter.</p>
+    <div class="detailbox">
+      <dl>
+        <dt>Requested By</dt><dd>${c.by}</dd>
+        <dt>Requested</dt><dd>${c.date}</dd>
+        <dt>Status</dt><dd>${chip(c.status,st(c.status))}</dd>
+        ${c.decisionReason?`<dt>Decision Reason</dt><dd>${c.decisionReason}</dd>`:''}
+        <dt>Details</dt><dd>${c.details}</dd>
+      </dl>
+      ${canDecide && c.status==='Pending' && c.by!==currentPartyName() ? `<div class="inline-actions"><button class="btn-sm" onclick="openActionModal('consent',${i},'approve')">Approve</button><button class="btn-sm outline" onclick="openActionModal('consent',${i},'reject')">Decline</button></div>${actionModalHtml('consent',i)}` : ''}
+      <h3 style="font-size:13.5px;margin:16px 0 8px;color:var(--navy);">Related activity on this request</h3>
+      ${related.length? related.map(r=>`<div class="item"><b>${r.module}</b> — ${r.action}<div class="muted">${r.actor} · ${r.ts}</div></div>`).join('') : '<div class="muted">No further activity logged yet.</div>'}
+    </div>`;
+  }
+
+  let html = `<h2>Consents</h2>
+  <p class="subtitle">Request and approval/confirmation workflow — travel consent, change of doctor, change of school, etc. Click a row for details.</p>`;
+  if(canRequest){
+    html += `<div class="formbox"><h3>Request a consent as ${currentPartyName()}</h3>
+      <label>Subject</label>
+      <select id="consSubject"><option>Travel Consent</option><option>Change of Doctor</option><option>Change of School</option><option>Other</option></select>
+      <label>Details</label><textarea id="consDetails" placeholder="Describe what you need consent for..."></textarea>
+      <div class="err-text" id="consErr"></div>
+      <button class="btn-sm" onclick="requestConsent()">Request consent</button>
+    </div>`;
+  }
+  html += `<table><tr><th>Subject</th><th>Requested By</th><th>Requested</th><th>Details</th><th>Status</th>${canDecide?'<th>Action</th>':''}</tr>
+  ${rows.map((c,i)=>`<tr class="clickable" onclick="viewDetail('consents',${i})"><td>${c.subject}</td><td>${c.by}</td><td>${c.date}</td><td>${c.details}</td><td>${chip(c.status,st(c.status))}</td>${canDecide?`<td>${c.status==='Pending' && c.by!==currentPartyName() ? `<div class="inline-actions"><button class="btn-sm" onclick="event.stopPropagation();openActionModal('consent',${i},'approve')">Approve</button><button class="btn-sm outline" onclick="event.stopPropagation();openActionModal('consent',${i},'reject')">Decline</button></div>${actionModalHtml('consent',i)}` : '<span class="muted">—</span>'}</td>`:''}</tr>`).join('') || `<tr><td colspan="${canDecide?6:5}" class="muted">No consent requests.</td></tr>`}
+  </table>`;
+  return html;
+}
+function requestConsent(){
+  const subject = document.getElementById('consSubject').value;
+  const details = document.getElementById('consDetails').value.trim();
+  const errEl = document.getElementById('consErr');
+  if(!details){ errEl.textContent = "Add some details before requesting."; return; }
+  errEl.textContent = "";
+  (DATA.consents[state.matterId]=DATA.consents[state.matterId]||[]).unshift({subject, by:currentPartyName(), date:'just now', status:'Pending', details});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Consents", actor:currentPartyName(), action:`Requested consent: ${subject}`});
+  render();
+}
+function decideConsent(i, approve, reason){
+  const rows = DATA.consents[state.matterId]||[];
+  const c = rows[i];
+  if(!c) return;
+  c.status = approve ? 'Approved' : 'Declined';
+  c.decisionReason = reason || null;
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Consents", actor:currentPartyName(), action:`${approve?'Approved':'Declined'} consent: ${c.subject}${reason?` — reason: ${reason}`:''}`});
+  render();
+}
+
+function pageNotices(){
+  const rows = DATA.notices[state.matterId]||[];
+  const canCreate = ['Plaintiff','Defendant','CourtAdmin'].includes(state.role);
+  return `<h2>Notices</h2>
+  <p class="subtitle">Emergency notifications or informational notices shared between parties.</p>
+  ${canCreate ? `<div class="formbox"><h3>Send a notice as ${currentPartyName()}</h3>
+    <label>Title</label><input type="text" id="noticeTitle" placeholder="e.g. ${ex('noticeTitle')}">
+    <label>Severity</label>
+    <select id="noticeSev"><option value="Informational">Informational</option><option value="Emergency">Emergency</option></select>
+    <label>Details</label><textarea id="noticeBody" placeholder="Describe the notice..."></textarea>
+    <div class="err-text" id="noticeErr"></div>
+    <button class="btn-sm" onclick="sendNotice()">Send notice</button>
+  </div>` : ''}
+  ${rows.map(n=>`<div class="alert ${n.sev==='Emergency'?'alert-error':'alert-info'}"><b>${n.title}</b><div style="margin:4px 0;">${n.body}</div><div class="muted">${n.date}</div></div>`).join('') || '<div class="muted">No notices.</div>'}`;
+}
+function sendNotice(){
+  const title = document.getElementById('noticeTitle').value.trim();
+  const sev = document.getElementById('noticeSev').value;
+  const body = document.getElementById('noticeBody').value.trim();
+  const errEl = document.getElementById('noticeErr');
+  if(!title || !body){ errEl.textContent = "Add a title and details before sending."; return; }
+  errEl.textContent = "";
+  (DATA.notices[state.matterId]=DATA.notices[state.matterId]||[]).unshift({title, sev, date:'just now', body});
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Notices", actor:currentPartyName(), action:`Sent notice: ${title} (${sev})`});
+  render();
+}
+
+function pageRecords(){
+  const rows = DATA.audit[state.matterId]||[];
+  return `<h2>Records Export</h2>
+  <p class="subtitle">Full audit trail across every module, usable for courts — every step tracked. Benchmarked from ODR platforms' "centralized case record." Free to export — no fee for downloading your own records (see Fee Types on Payment Methods & Charges).</p>
+  <button class="btn-sm outline" style="margin-bottom:16px;" onclick="exportRecordsCSV()">⬇ Export Records (CSV)</button>
+  <table><tr><th>Timestamp</th><th>Module</th><th>Actor</th><th>Action</th></tr>
+  ${rows.map(a=>`<tr><td>${a.ts}</td><td>${chip(a.module)}</td><td>${a.actor}</td><td>${a.action}</td></tr>`).join('') || `<tr><td colspan="4" class="muted">No records yet.</td></tr>`}
+  </table>`;
+}
+// Documents hub — aggregates every real attachment on this Matter (Submissions, Expense receipts, Journal photos)
+// into one place, filtered to exactly what the current role is allowed to see, reusing each source module's own
+// visibility rule rather than inventing a new one: Submissions use the existing canSeeSubmission() gate; Expense
+// receipts are visible to whoever paid + the opposite party (who has to approve/decline reimbursement) + CourtAdmin;
+// Journal photos follow their own shareWith field. Added per Shehab's direct request for per-role document
+// visibility plus a real (not disabled) export.
+function documentRowsForRole(){
+  const rows = [];
+  (DATA.submissions[state.matterId]||[]).forEach(s=>{ if(s.fileData && canSeeSubmission(s)) rows.push({source:s.kind, title:s.title, by:s.role, date:s.date, fileData:s.fileData, fileName:s.fileName}); });
+  (DATA.expenses[state.matterId]||[]).forEach(e=>{ if(e.fileData && (state.role==='CourtAdmin' || e.paidBy===currentPartyName() || oppositeRole(e.paidBy)===state.role)) rows.push({source:'Expense Receipt', title:e.desc, by:e.paidBy, date:e.date, fileData:e.fileData, fileName:e.fileName}); });
+  (DATA.journal[state.matterId]||[]).forEach(j=>{ if(j.photoData && (state.role==='CourtAdmin' || j.author===currentPartyName() || j.shareWith==='Both parents')) rows.push({source:'Journal Photo', title:j.note||'Moment', by:j.author, date:j.date, fileData:j.photoData, fileName:j.photoName}); });
+  return rows;
+}
+function pageDocuments(){
+  const rows = documentRowsForRole();
+  return `<h2>Documents</h2>
+  <p class="subtitle">Every attachment on this Matter, filtered to exactly what you as <b>${state.role}</b> are allowed to see — the same visibility rule as each source module (Submissions, Expenses, Journal). Click 📎 to open.</p>
+  <div class="inline-actions" style="margin-bottom:6px;">
+    <button class="btn-sm outline" onclick="exportDocumentsCSV()">⬇ Export list (CSV) — free, for your own use</button>
+    <button class="btn-sm outline" onclick="openCertifiedExport('documents','all')">📜 Certified Export for Court Submission (fee applies)</button>
+  </div>
+  ${certifiedExportHtml('documents','all')}
+  <div style="height:8px;"></div>
+  <table><tr><th>Source</th><th>Title</th><th>By</th><th>Date</th><th>File</th></tr>
+  ${rows.map(r=>`<tr><td>${chip(r.source)}</td><td>${r.title}</td><td>${r.by}</td><td>${r.date}</td><td><button class="btn-sm outline" onclick="window.open('${r.fileData}','_blank')">📎 ${r.fileName||'View'}</button></td></tr>`).join('') || `<tr><td colspan="5" class="muted">No documents visible to your role on this Matter.</td></tr>`}
+  </table>`;
+}
+// Real, working export — a Blob + temporary download link (functions in an actual browser, unlike the previous
+// disabled placeholder button).
+function downloadCSV(filename, rows, headers){
+  const esc = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const lines = [headers.map(esc).join(',')].concat(rows.map(r=>headers.map(h=>esc(r[h])).join(',')));
+  const csv = lines.join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+function exportDocumentsCSV(){
+  const rows = documentRowsForRole().map(r=>({Source:r.source, Title:r.title, By:r.by, Date:r.date, FileName:r.fileName||''}));
+  downloadCSV(`documents_${state.matterId}.csv`, rows, ['Source','Title','By','Date','FileName']);
+}
+function exportRecordsCSV(){
+  const rows = (DATA.audit[state.matterId]||[]).map(a=>({Timestamp:a.ts, Module:a.module, Actor:a.actor, Action:a.action}));
+  downloadCSV(`records_${state.matterId}.csv`, rows, ['Timestamp','Module','Actor','Action']);
+}
+// Certified Export Fee — added per Shehab's direct feedback: the fee table alone wasn't enough, it must be
+// REFLECTED ON THE ACTUAL INTERACTION that requires it. Downloading your own stuff stays free (see fmtDT block
+// above), but requesting a certified, court-admissible copy of something — e.g. the other party's conversation, to
+// submit as evidence — is a real billable action, so the payment prompt now appears at the moment that specific
+// action is requested (same pattern as the court-filing fee note), not just as a static reference row.
+const CERTIFIED_EXPORT_FEE = 15.00;
+let certExportRequest = null; // {kind:'messaging'|'documents', ref}
+function openCertifiedExport(kind, ref){ certExportRequest = {kind, ref: String(ref)}; render(); }
+function cancelCertifiedExport(){ certExportRequest = null; render(); }
+function certifiedExportHtml(kind, ref){
+  if(!certExportRequest || certExportRequest.kind!==kind || certExportRequest.ref!==String(ref)) return '';
+  const methods = DATA.paymentMethods[state.matterId]||[];
+  const mine = methods.find(m=>m.party===currentPartyName());
+  return `<div class="formbox" onclick="event.stopPropagation()" style="margin-top:8px;border-color:var(--amber);">
+    <p style="margin:0 0 8px;font-size:12.5px;">This creates a certified, court-admissible export — suitable to submit as evidence. <b>Fee: $${CERTIFIED_EXPORT_FEE.toFixed(2)}</b> (Certified Export Fee, charged by this app). Downloading your own records for your own use stays free.</p>
+    ${mine ? `<button class="btn-sm" onclick="confirmCertifiedExport('${kind}','${ref}')">Pay $${CERTIFIED_EXPORT_FEE.toFixed(2)} & Download</button>` : `<div class="muted" style="margin-bottom:8px;">Add a payment method on Payment Methods & Charges first.</div>`}
+    <button class="btn-sm outline" onclick="cancelCertifiedExport()">Cancel</button>
+  </div>`;
+}
+function confirmCertifiedExport(kind, ref){
+  const methods = DATA.paymentMethods[state.matterId]||[];
+  const mine = methods.find(m=>m.party===currentPartyName());
+  if(!mine) return;
+  const methodLabel = `${mine.brand} •••• ${mine.last4}`;
+  let desc, rows, headers, filename;
+  if(kind==='messaging'){
+    const threads = DATA.messages[state.matterId]||[];
+    const t = threads[Number(ref)];
+    desc = `Certified Transcript — ${t ? t.subject : 'Messaging Thread'}`;
+    rows = (t?t.msgs:[]).map(m=>({From:m.from, Sent:m.sent, Viewed:m.viewed||'Not yet viewed', Message:m.body}));
+    headers = ['From','Sent','Viewed','Message'];
+    filename = `certified_transcript_${state.matterId}.csv`;
+  } else {
+    desc = 'Certified Documents Export';
+    rows = documentRowsForRole().map(r=>({Source:r.source, Title:r.title, By:r.by, Date:r.date, FileName:r.fileName||''}));
+    headers = ['Source','Title','By','Date','FileName'];
+    filename = `certified_documents_${state.matterId}.csv`;
+  }
+  (DATA.payments[state.matterId]=DATA.payments[state.matterId]||[]).unshift({
+    kind:'Certified Export Fee', desc, amount:CERTIFIED_EXPORT_FEE, currency:'$', party:currentPartyName(),
+    chargedBy:'This app (certified export for court submission)', method:methodLabel, status:'Paid', date:'just now',
+    feeLines:[{label:'Certified Export Fee (this app — court-admissible export)', amount:CERTIFIED_EXPORT_FEE}]
+  });
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Payments", actor:currentPartyName(), action:`Paid Certified Export Fee ($${CERTIFIED_EXPORT_FEE.toFixed(2)}) and downloaded: ${desc}`});
+  downloadCSV(filename, rows, headers);
+  certExportRequest = null;
+  render();
+}
+
+function pageNotifications(){
+  const rows = (DATA.notifications[state.matterId]||[]).filter(n=>!n.forRole || n.forRole===state.role);
+  const liveInstallments = computeInstallmentNotifications().filter(n=>!n.owner || n.owner===state.role);
+  return `<h2>Notification Center</h2>
+  <p class="subtitle">Notifications relevant to you as <b>${state.role}</b>.</p>
+  ${liveInstallments.map(n=>`<div class="item">🔔 <b>${n.title}</b><div class="muted">Installment Plan · computed live</div></div>`).join('')}
+  ${rows.map(n=>`<div class="item">${n.read?'✓':'●'} <b>${n.title}</b><div class="muted">${n.module} · ${n.ts}${n.forRole?` · For ${n.forRole}`:''}</div></div>`).join('') || (liveInstallments.length? '' : '<div class="muted">No notifications for your role right now.</div>')}`;
+}
+
+// Selective document visibility — evidenced directly by Ahmed Kareem's own words: documents an expert files may only
+// be partly shareable, and "the other side's lawyer — it's up to you which of them he sees and which he doesn't"
+// ("حضرتك هتختار مين اللي يشوف مين اللي ما يشوفش"), sharpened by the user's own follow-up: real per-person
+// CUSTOMIZATION, not just a few fixed tiers. The submitter checks off exactly which OTHER roles can see a
+// submission (their own role and CourtAdmin always can, non-negotiable — court oversight). A role that isn't
+// checked simply doesn't see the row (matches Kareem's literal show/hide framing, not a "visible-but-redacted"
+// placeholder). Missing/legacy `visibleRoles` (anything seeded before this feature existed) defaults to nobody
+// extra — own role + CourtAdmin only, the ORIGINAL pre-this-round behavior — so nothing already seeded silently
+// becomes more visible than it was before this feature shipped.
+const ALL_VIS_ROLES = ['Plaintiff','Defendant','Lawyer','Expert','Witness'];
+function canSeeSubmission(s){
+  if(state.role===s.role || state.role==='CourtAdmin') return true;
+  return Array.isArray(s.visibleRoles) && s.visibleRoles.includes(state.role);
+}
+function pageSubmissions(){
+  const all = DATA.submissions[state.matterId]||[];
+  const rows = all.filter(canSeeSubmission);
+  const st = s=> s==='Reviewed'?'success': s==='Submitted'?'warning':'default';
+
+  if(state.detail.page==='submissions' && all[state.detail.idx] && canSeeSubmission(all[state.detail.idx])){
+    const s = all[state.detail.idx];
+    const i = state.detail.idx;
+    return `<button class="backlink" onclick="closeDetail()">← Back to My Submissions</button>
+    <h2>${s.title}</h2>
+    <p class="subtitle">${s.kind} — visible to you as <b>${state.role}</b> on this Matter.</p>
+    <div class="detailbox">
+      <dl>
+        <dt>Kind</dt><dd>${s.kind}${s.docType?` (${s.docType})`:''}</dd>
+        ${state.role==='CourtAdmin'?`<dt>Submitted By</dt><dd>${s.role}</dd>`:''}
+        ${s.filedFor?`<dt>Filed On Behalf Of</dt><dd>${s.filedFor}</dd>`:''}
+        ${s.location?`<dt>Location</dt><dd>📍 ${s.location}</dd>`:''}
+        <dt>Date</dt><dd>${s.date}</dd>
+        <dt>Status</dt><dd>${chip(s.status,st(s.status))}</dd>
+        <dt>Visible To</dt><dd>${s.role} (submitter) + CourtAdmin${(s.visibleRoles&&s.visibleRoles.length)?', ' + s.visibleRoles.join(', ') : ' only'}</dd>
+      </dl>
+      <h3 style="font-size:13.5px;margin:0 0 8px;color:var(--navy);">Content</h3>
+      <p style="font-size:13.5px;line-height:1.6;">${s.body}</p>
+      ${s.fileData?`<p><button class="btn-sm outline" onclick="window.open('${s.fileData}','_blank')">📎 Open ${s.fileName||'attachment'}</button></p>`:'<p class="muted">No document attached.</p>'}
+      ${state.role==='CourtAdmin' && s.status!=='Reviewed' ? `<button class="btn-sm outline" onclick="markSubmissionReviewed(${i})">Mark reviewed</button>` : ''}
+    </div>`;
+  }
+
+  let html = `<h2>My Submissions</h2>
+  <p class="subtitle">Reports, statements and filings owed by your role, and their review status. Click a row to read the full content.</p>`;
+
+  const visibilityPicker = `<label>Who else can see this submission? (you and Court Admin always can — check any others)</label>
+      <div style="display:flex;flex-wrap:wrap;gap:4px 14px;margin:2px 0 10px;">
+        ${ALL_VIS_ROLES.filter(r=>r!==state.role).map(r=>`<label style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:400;color:var(--text);"><input type="checkbox" class="subVisRole" value="${r}" style="width:auto;margin:0;"> ${r}</label>`).join('')}
+      </div>`;
+
+  if(state.role==='Expert' && matterType()==='Commercial'){
+    html += `<div class="formbox"><h3>Submit a Site Inspection Report as ${currentPartyName()}</h3>
+      <label>Title</label><input type="text" id="subTitle" placeholder="e.g. ${ex('subTitleExpert')}">
+      <label>Location</label>${locationPickerField('subLocation', true)}
+      <div style="height:10px;"></div>
+      <label>Report</label><textarea id="subBody" placeholder="Summarize what was inspected and observed..."></textarea>
+      <label>Attach a supporting document (optional)</label><input type="file" id="subFile" accept="image/*,.pdf,.doc,.docx">
+      ${visibilityPicker}
+      <div class="err-text" id="subErr"></div>
+      <button class="btn-sm" onclick="submitReport('Inspection Report')">Submit inspection report</button>
+    </div>`;
+  } else if(state.role==='Expert'){
+    html += `<div class="formbox"><h3>Submit an Expert Report as ${currentPartyName()}</h3>
+      <label>Title</label><input type="text" id="subTitle" placeholder="e.g. ${ex('subTitleExpert')}">
+      <label>Report</label><textarea id="subBody" placeholder="Summarize your findings..."></textarea>
+      <label>Attach a supporting document (optional)</label><input type="file" id="subFile" accept="image/*,.pdf,.doc,.docx">
+      ${visibilityPicker}
+      <div class="err-text" id="subErr"></div>
+      <button class="btn-sm" onclick="submitReport('Expert Report')">Submit report</button>
+    </div>`;
+  } else if(state.role==='Witness'){
+    html += `<div class="formbox"><h3>Submit a Witness Statement as ${currentPartyName()}</h3>
+      <label>Title</label><input type="text" id="subTitle" placeholder="e.g. ${ex('subTitleWitness')}">
+      <label>Statement</label><textarea id="subBody" placeholder="Describe what you witnessed..."></textarea>
+      <label>Attach a supporting document (optional)</label><input type="file" id="subFile" accept="image/*,.pdf,.doc,.docx">
+      ${visibilityPicker}
+      <div class="err-text" id="subErr"></div>
+      <button class="btn-sm" onclick="submitReport('Witness Statement')">Submit statement</button>
+    </div>`;
+  } else if(state.role==='Lawyer'){
+    const partyOptions = matter().parties.filter(p=>['Plaintiff','Defendant'].includes(p.role));
+    html += `<div class="formbox"><h3>File a Legal Document as ${currentPartyName()}</h3>
+      <label>Document Type</label>
+      <select id="subType" onchange="updateCourtFeeNote()"><option>Motion</option><option>Filing</option><option>Brief</option><option>Correspondence</option></select>
+      <div class="muted" id="subFeeNote" style="margin:-4px 0 10px;">Estimated court fee upon filing: $${COURT_FEE_SCHEDULE.Motion.total.toFixed(2)} ($${COURT_FEE_SCHEDULE.Motion.court.toFixed(2)} court filing fee + $${COURT_FEE_SCHEDULE.Motion.service.toFixed(2)} platform service fee).</div>
+      ${partyOptions.length ? `<label>Filed On Behalf Of</label>
+      <select id="subFiledFor">${partyOptions.map(p=>`<option value="${p.name}">${p.name} (${p.role})</option>`).join('')}</select>` : ''}
+      <label>Title</label><input type="text" id="subTitle" placeholder="e.g. ${ex('subTitleLawyer')}">
+      <label>Summary</label><textarea id="subBody" placeholder="Brief summary of the filing..."></textarea>
+      <label>Attach the document (optional)</label><input type="file" id="subFile" accept="image/*,.pdf,.doc,.docx">
+      ${visibilityPicker}
+      <div class="err-text" id="subErr"></div>
+      <button class="btn-sm" onclick="submitReport('Legal Document')">File document</button>
+    </div>`;
+  }
+
+  html += `<table><tr><th>Kind</th><th>Title</th>${state.role==='CourtAdmin'?'<th>Submitted By</th>':''}<th>Attachment</th><th>Date</th><th>Status</th>${state.role==='CourtAdmin'?'<th>Action</th>':''}</tr>
+  ${rows.map((s)=>{const i=all.indexOf(s); return `<tr class="clickable" onclick="viewDetail('submissions',${i})"><td>${s.kind}</td><td>${s.title}</td>${state.role==='CourtAdmin'?`<td>${s.role}</td>`:''}<td>${s.fileData?`<button class="btn-sm outline" onclick="event.stopPropagation();window.open('${s.fileData}','_blank')">📎 ${s.fileName||'View'}</button>`:'<span class="muted">—</span>'}</td><td>${s.date}</td><td>${chip(s.status,st(s.status))}</td>${state.role==='CourtAdmin'?`<td>${s.status!=='Reviewed'?`<button class="btn-sm outline" onclick="event.stopPropagation();markSubmissionReviewed(${i})">Mark reviewed</button>`:'<span class="muted">—</span>'}</td>`:''}</tr>`;}).join('') || `<tr><td colspan="${state.role==='CourtAdmin'?6:5}" class="muted">No submissions yet.</td></tr>`}
+  </table>`;
+  return html;
+}
+function submitReport(kind){
+  const title = document.getElementById('subTitle').value.trim();
+  const body = document.getElementById('subBody').value.trim();
+  const locEl = document.getElementById('subLocation');
+  const location = locEl ? locEl.value.trim() : '';
+  const visibleRoles = Array.from(document.querySelectorAll('.subVisRole:checked')).map(el=>el.value);
+  const errEl = document.getElementById('subErr');
+  if(!title || !body){ errEl.textContent = "Add a title and content before submitting."; return; }
+  errEl.textContent = "";
+  const docTypeEl = document.getElementById('subType');
+  const filedForEl = document.getElementById('subFiledFor');
+  const docType = docTypeEl ? docTypeEl.value : null;
+  const filedFor = filedForEl ? filedForEl.value : null;
+  const finish = (fileData, fileName) => {
+    (DATA.submissions[state.matterId]=DATA.submissions[state.matterId]||[]).unshift({role:state.role, kind, docType: docType||undefined, filedFor: filedFor||undefined, title, body, location: location||null, visibleRoles, date:'just now', status:'Submitted', fileData:fileData||null, fileName:fileName||null});
+    (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Submissions", actor:currentPartyName(), action:`Submitted ${kind}: ${title}${location?` — 📍 ${location}`:''}${fileName?` (attached ${fileName})`:''}`});
+    if(kind==='Legal Document' && docType && filedFor) chargeCourtFee(docType, title, filedFor);
+    render();
+  };
+  const fileInput = document.getElementById('subFile');
+  const f = fileInput && fileInput.files && fileInput.files[0];
+  if(f){
+    const reader = new FileReader();
+    reader.onload = function(){ finish(reader.result, f.name); };
+    reader.readAsDataURL(f);
+  } else {
+    finish(null, null);
+  }
+}
+function markSubmissionReviewed(i){
+  const rows = DATA.submissions[state.matterId]||[];
+  const s = rows[i];
+  if(!s) return;
+  s.status = 'Reviewed';
+  (DATA.audit[state.matterId]=DATA.audit[state.matterId]||[]).unshift({ts:"just now", module:"Submissions", actor:currentPartyName(), action:`Marked reviewed: ${s.title}`});
+  render();
+}
+
+// Owner-role inference for a two-sided item: whichever named party ISN'T the one who acted (`name`) owes the next
+// step. Same convention already used by the Negotiation/Consents/Payment-Request decide-gates (`by !== currentPartyName()`).
+function oppositeRole(name){
+  const p = matter().parties.find(pp=>pp.name===name);
+  if(!p) return null;
+  if(p.role==='Plaintiff') return 'Defendant';
+  if(p.role==='Defendant') return 'Plaintiff';
+  return null;
+}
+// Pending Actions — pulled LIVE from every module's own current-state, not a separate static list that can drift out
+// of sync with what Consents/Negotiation/Payment Requests/etc. actually show. Directly answers the user's ask:
+// switching roles should surface exactly what's genuinely required of THAT role right now, and interfaces already
+// exist on each source page (Approve/Decline, Accept/Reject, Pay Now, Mark responded) to act on it from there.
+function computeLivePending(){
+  const rows = [];
+  (DATA.consents[state.matterId]||[]).forEach((c,i)=>{ if(c.status!=='Pending') return;
+    const owner = oppositeRole(c.by); if(owner) rows.push({title:`Review consent request: ${c.subject}`, owner, due:'—', status:'Open', kind:'consent', refIdx:i});
+  });
+  (DATA.scheduleRequests[state.matterId]||[]).forEach((r,i)=>{ if(r.status!=='Pending') return;
+    const owner = oppositeRole(r.requestedBy); if(owner) rows.push({title:`Review schedule change request: ${r.eventTitle}`, owner, due:'—', status:'Open', kind:'schedule', refIdx:i});
+  });
+  (DATA.expenses[state.matterId]||[]).forEach((e,i)=>{ if(e.status!=='Pending' && e.status!=='Reimbursement Requested') return;
+    const owner = oppositeRole(e.paidBy); if(owner) rows.push({title:`Approve reimbursement: ${e.desc}`, owner, due:'—', status:'Open', kind:'expense', refIdx:i});
+  });
+  (DATA.negotiation[state.matterId]||[]).forEach((o,i)=>{ if(o.status!=='Pending') return;
+    const owner = oppositeRole(o.by); if(owner) rows.push({title:`Decide on settlement offer: $${o.amount.toFixed(2)}`, owner, due:'—', status:'Open', kind:'negotiation', refIdx:i});
+  });
+  (DATA.paymentRequests[state.matterId]||[]).forEach((r,i)=>{ if(r.status!=='Pending') return;
+    const owner = oppositeRole(r.by); if(owner) rows.push({title:`Pay requested payment: $${r.amount.toFixed(2)} — ${r.reason}`, owner, due:dueLabel(r.dueDate), status:'Open', kind:'paymentRequest', refIdx:i});
+  });
+  (DATA.rfeTracking[state.matterId]||[]).forEach((r,i)=>{ if(r.status!=='Open') return;
+    rows.push({title:`Respond to RFE: ${r.subject}`, owner:'Lawyer', due:r.deadline, status:'Open', kind:'rfe', refIdx:i});
+  });
+  (DATA.submissions[state.matterId]||[]).forEach((s,i)=>{ if(s.status!=='Submitted') return;
+    rows.push({title:`Review submission: ${s.title}`, owner:'CourtAdmin', due:'—', status:'Open', kind:'submission', refIdx:i});
+  });
+  const plans = computeInstallmentNotifications();
+  plans.forEach(n=>{ rows.push({title:n.title, owner:n.owner, due:n.due, status:'Open', kind:'installment', refIdx:null}); });
+  return rows;
+}
+function pendingActionCell(p){
+  if(p.owner!==state.role) return '<span class="muted">—</span>';
+  if(!ACTIONABLE_PENDING_KINDS.includes(p.kind)) return '<span class="muted">Open module to act</span>';
+  return `<div class="inline-actions"><button class="btn-sm" onclick="openActionModal('${p.kind}',${p.refIdx},'approve')">${p.kind==='paymentRequest'?'Pay / Approve':'Approve'}</button><button class="btn-sm outline" onclick="openActionModal('${p.kind}',${p.refIdx},'reject')">Reject</button></div>${actionModalHtml(p.kind,p.refIdx)}`;
+}
+function pagePending(){
+  const rows = computeLivePending();
+  return `<h2>Pending Action System</h2>
+  <p class="subtitle">Cross-module queue of actions owed by each role, computed live from Consents, Schedule Change Requests, Expenses, Negotiation, Payment Requests, Installment Plans, RFEs and Submissions — switch "Viewing as" above and this list changes to exactly what that role owes right now. Approve/Reject directly below (a reason is required to reject), or open the source module from the sidebar for full context.</p>
+  <table><tr><th>Title</th><th>Owner Role</th><th>Due By</th><th>Status</th><th>Action</th></tr>
+  ${rows.map(p=>`<tr><td>${p.title}</td><td>${chip(p.owner, p.owner===state.role?'primary':'default')}</td><td>${p.due}</td><td>${chip(p.status,'warning')}</td><td>${pendingActionCell(p)}</td></tr>`).join('') || `<tr><td colspan="5" class="muted">No pending actions.</td></tr>`}
+  </table>`;
+}
+
+const PAGES = { dashboard:pageDashboard, family:pageFamily, legal:pageLegal, agreements:pageAgreements,
+  activities:pageActivities, calendar:pageCalendar, messaging:pageMessaging, notes:pageNotes, journal:pageJournal,
+  expenses:pageExpenses, payments:pagePayments, consents:pageConsents, notices:pageNotices, records:pageRecords,
+  submissions:pageSubmissions, notifications:pageNotifications, pending:pagePending,
+  medicalSettlement:pageMedicalSettlement, chargesCourtDates:pageChargesCourtDates,
+  immigrationFilings:pageImmigrationFilings, negotiation:pageNegotiation };
+
+function render(){
+  renderSidebar();
+  renderTopControls();
+  document.getElementById('content').innerHTML = PAGES[state.page]();
+}
+
+render();
+</script>
+</body>
+</html>
